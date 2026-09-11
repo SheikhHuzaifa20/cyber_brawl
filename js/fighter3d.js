@@ -11,7 +11,7 @@ const ULTRA_ROSTER = {
         type: 'MALE',
         rank: 'SUPER DIAMOND RANK',
         vtrigger: 'TITAN FORCE',
-        colors: { primary: 0xff4400, secondary: 0x200800, skin: 0xd58555 }
+        colors: { primary: 0xf2eee4, secondary: 0x182640, accent: 0xc51f3a, skin: 0xd58555 }
     },
     mai: {
         id: 'mai',
@@ -63,7 +63,7 @@ class Fighter3D {
 
         this.maxHealth = 100;
         this.health = 100;
-        this.energy = 0;
+        this.energy = 100;
         this.combo = 0;
         this.comboTimer = 0;
 
@@ -91,6 +91,7 @@ class Fighter3D {
         const matSecondary = new THREE.MeshStandardMaterial({ color: sColor, roughness: 0.4 });
         const matSkin = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.5 });
         const matGold = new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 0.9, roughness: 0.2 });
+        const matAccent = new THREE.MeshStandardMaterial({ color: charData.colors.accent || 0xffcc00, roughness: 0.35, metalness: 0.25 });
 
         // Pelvis
         const pelvisW = isFemale ? 0.7 : 0.95;
@@ -139,7 +140,19 @@ class Fighter3D {
             hair.rotation.x = -Math.PI / 3;
             hair.position.set(0, 0.2, -0.35);
             head.add(hair);
-        } else if (this.characterId === 'kyo') {
+        } else {
+            const bandGeo = new THREE.BoxGeometry(0.78, 0.1, 0.12);
+            const band = new THREE.Mesh(bandGeo, matAccent);
+            band.position.set(0, 0.04, 0.28);
+            head.add(band);
+            const tailGeo = new THREE.CylinderGeometry(0.035, 0.025, 1.05, 8);
+            const tail = new THREE.Mesh(tailGeo, matAccent);
+            tail.rotation.z = -0.4;
+            tail.position.set(-0.42, 0.18, -0.05);
+            head.add(tail);
+        }
+
+        if (this.characterId === 'kyo') {
             const bandGeo = new THREE.TorusGeometry(0.34, 0.04, 8, 16);
             const band = new THREE.Mesh(bandGeo, matGold);
             band.rotation.x = Math.PI / 2;
@@ -168,6 +181,14 @@ class Fighter3D {
         rForearm.position.y = -0.5;
         rightShoulder.add(rForearm);
 
+        const gloveGeo = new THREE.SphereGeometry(isFemale ? 0.2 : 0.3, 12, 12);
+        const leftGlove = new THREE.Mesh(gloveGeo, matAccent);
+        leftGlove.position.y = -0.92;
+        leftShoulder.add(leftGlove);
+        const rightGlove = new THREE.Mesh(gloveGeo, matAccent);
+        rightGlove.position.y = -0.92;
+        rightShoulder.add(rightGlove);
+
         // Legs & Thighs
         const thighW = isFemale ? 0.32 : 0.44;
         const thighGeo = new THREE.CylinderGeometry(thighW, thighW * 0.75, 0.9, 12);
@@ -193,6 +214,11 @@ class Fighter3D {
         rCalf.position.y = -0.9;
         rightHip.add(rCalf);
 
+        const beltGeo = new THREE.CylinderGeometry(chestBotW * 0.72, chestBotW * 0.72, 0.12, 12);
+        const belt = new THREE.Mesh(beltGeo, matAccent);
+        belt.position.y = -0.45;
+        chest.add(belt);
+
         this.limbs = { pelvis, chest, head, leftShoulder, rightShoulder, leftHip, rightHip };
         this.group.position.set(this.x, this.y, this.z);
     }
@@ -203,7 +229,7 @@ class Fighter3D {
         this.vx = 0;
         this.vy = 0;
         this.health = this.maxHealth;
-        this.energy = 0;
+        this.energy = 100;
         this.state = 'IDLE';
         this.isGrounded = true;
         this.combo = 0;
@@ -331,6 +357,7 @@ class Fighter3D {
 
     special1() {
         if (!this.canAttack()) return;
+        this.energy = Math.max(0, this.energy - 25);
         this.state = 'SPECIAL_1';
         this.attackTimer = 24;
         voiceEngine.playAttackCry(this.characterId, 'SPECIAL_1');
@@ -340,6 +367,7 @@ class Fighter3D {
 
     special2() {
         if (!this.canAttack()) return;
+        this.energy = Math.max(0, this.energy - 40);
         this.state = 'SPECIAL_2';
         this.attackTimer = 28;
         this.vx = 0.18 * this.facing;

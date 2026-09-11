@@ -91,6 +91,12 @@
                 <h1 id="announcer-text">FIGHT!</h1>
             </div>
 
+            <div id="combat-status" class="combat-status">
+                <span class="status-kicker">COMBAT FEED</span>
+                <strong id="combat-action">READY</strong>
+                <span id="combat-detail">Choose an action to enter the arena.</span>
+            </div>
+
             <!-- Bottom Control Bar -->
             <div class="hud-bottom-bar">
                 <button id="btn-pause-ingame" class="hud-btn">⏸ PAUSE</button>
@@ -116,16 +122,16 @@
             <!-- Right Action Buttons -->
             <div class="virtual-actions">
                 <div class="action-row top">
-                    <button id="btn-touch-spec1" class="action-btn spec1">💥 SPECIAL 1</button>
-                    <button id="btn-touch-spec2" class="action-btn spec2">⚡ SPECIAL 2</button>
+                    <button id="btn-touch-spec1" class="action-btn spec1"><span>💥</span><b>SPECIAL 1</b><small>FIREBALL</small></button>
+                    <button id="btn-touch-spec2" class="action-btn spec2"><span>⚡</span><b>SPECIAL 2</b><small>POWER RUSH</small></button>
                 </div>
                 <div class="action-row mid">
-                    <button id="btn-touch-lpunch" class="action-btn lpunch">🥊 PUNCH</button>
-                    <button id="btn-touch-hpunch" class="action-btn hpunch">💥 H.PUNCH</button>
+                    <button id="btn-touch-lpunch" class="action-btn lpunch"><span>🥊</span><b>PUNCH</b><small>F</small></button>
+                    <button id="btn-touch-hpunch" class="action-btn hpunch"><span>💥</span><b>H.PUNCH</b><small>G</small></button>
                 </div>
                 <div class="action-row bot">
-                    <button id="btn-touch-kick" class="action-btn kick">🦵 KICK</button>
-                    <button id="btn-touch-block" class="action-btn block">🛡️ GUARD</button>
+                    <button id="btn-touch-kick" class="action-btn kick"><span>🦵</span><b>KICK</b><small>H</small></button>
+                    <button id="btn-touch-block" class="action-btn block"><span>🛡️</span><b>GUARD</b><small>Q / SHIFT</small></button>
                 </div>
             </div>
         </div>
@@ -289,8 +295,9 @@
                         <ul>
                             <li><kbd>W</kbd> - Jump Up</li>
                             <li><kbd>S</kbd> - Crouch Down</li>
-                            <li><kbd>A</kbd> - Move Left / Guard Block</li>
-                            <li><kbd>D</kbd> - Move Right / Guard Block</li>
+                            <li><kbd>A</kbd> - Move Left</li>
+                            <li><kbd>D</kbd> - Move Right</li>
+                            <li><kbd>Q</kbd> or <kbd>SHIFT</kbd> - Hold Guard / Block</li>
                             <li><kbd>F</kbd> - Light Punch (+ Voice Shout)</li>
                             <li><kbd>G</kbd> - Heavy Punch (+ Voice Shout)</li>
                             <li><kbd>H</kbd> - High Kick (+ Voice Shout)</li>

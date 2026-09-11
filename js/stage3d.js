@@ -71,6 +71,24 @@ class Stage3DRenderer {
         gridHelper.position.y = 0.01;
         this.scene.add(gridHelper);
 
+        const railGeo = new THREE.BoxGeometry(28, 0.12, 0.12);
+        const railMat = new THREE.MeshStandardMaterial({ color: 0x25c8e8, emissive: 0x0a7890, emissiveIntensity: 1.2, metalness: 0.7 });
+        [1.8, 3.3, 4.8].forEach((height, index) => {
+            const rail = new THREE.Mesh(railGeo, railMat);
+            rail.position.set(0, height, -3.2);
+            rail.scale.x = 1 - index * 0.06;
+            this.scene.add(rail);
+        });
+
+        const panelGeo = new THREE.PlaneGeometry(4.4, 1.5);
+        const panelMat = new THREE.MeshStandardMaterial({ color: 0x081728, emissive: 0x003d58, emissiveIntensity: 1.4, transparent: true, opacity: 0.9, side: THREE.DoubleSide });
+        [-8, 8].forEach((x, index) => {
+            const panel = new THREE.Mesh(panelGeo, panelMat);
+            panel.position.set(x, 5.2, -4.4);
+            panel.rotation.y = index === 0 ? 0.16 : -0.16;
+            this.scene.add(panel);
+        });
+
         // 4. Ring Neon Light Pillars
         const pillarGeo = new THREE.CylinderGeometry(0.2, 0.2, 8, 16);
         const pillarMatP1 = new THREE.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x00f0ff, emissiveIntensity: 0.8 });

@@ -30,20 +30,27 @@ class TouchControllerManager {
             const startAction = (e) => {
                 if (e.cancelable) e.preventDefault();
                 this.activeStates[keyName] = true;
+                if (keyName === 'block') el.classList.add('guard-active');
                 this.triggerGameInput(keyName, true);
             };
 
             const endAction = (e) => {
                 if (e.cancelable) e.preventDefault();
                 this.activeStates[keyName] = false;
+                if (keyName === 'block') el.classList.remove('guard-active');
                 this.triggerGameInput(keyName, false);
             };
 
-            el.addEventListener('touchstart', startAction, { passive: false });
-            el.addEventListener('touchend', endAction, { passive: false });
-            el.addEventListener('mousedown', startAction);
-            el.addEventListener('mouseup', endAction);
-            el.addEventListener('mouseleave', endAction);
+            el.addEventListener('pointerdown', (e) => {
+                if (e.cancelable) e.preventDefault();
+                try {
+                    if (e.pointerId !== undefined) el.setPointerCapture?.(e.pointerId);
+                } catch (error) {}
+                startAction(e);
+            });
+            el.addEventListener('pointerup', endAction);
+            el.addEventListener('pointercancel', endAction);
+            el.addEventListener('lostpointercapture', endAction);
         };
 
         // Bind D-Pad
@@ -78,11 +85,22 @@ class TouchControllerManager {
             else if (keyName === 'spec1') p1.special1();
             else if (keyName === 'spec2') p1.special2();
             else if (keyName === 'block') p1.block();
+            if (window.gameInstance) window.gameInstance.showCombatAction(keyName);
         } else {
             if (keyName === 'left' || keyName === 'right') p1.stopMove();
             else if (keyName === 'down') p1.uncrouch();
             else if (keyName === 'block') p1.unblock();
         }
+    }
+
+    updateHeldInput(fighter) {
+        if (!fighter) return;
+        if (this.activeStates.left && !this.activeStates.right) fighter.moveLeft();
+        else if (this.activeStates.right && !this.activeStates.left) fighter.moveRight();
+        else if (!this.activeStates.left && !this.activeStates.right) fighter.stopMove();
+
+        if (this.activeStates.down) fighter.crouch();
+        else fighter.uncrouch();
     }
 
     toggleVisibility() {

@@ -40,6 +40,7 @@ class GameEngine3D {
         this.timerInterval = null;
         this.p1Wins = 0;
         this.p2Wins = 0;
+        this.roundNumber = 1;
 
         this.keys = {};
 
@@ -98,11 +99,18 @@ class GameEngine3D {
     initInputListeners() {
         window.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
+            if (this.gameState === 'FIGHTING' && (e.code === 'KeyQ' || e.code === 'ShiftLeft' || e.code === 'ShiftRight')) {
+                this.p1.block();
+                this.showCombatAction('block');
+            }
             if (e.code === 'Escape' && (this.gameState === 'FIGHTING' || this.gameState === 'PAUSED')) {
                 this.togglePause();
             }
         });
         window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyQ' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') this.p1.unblock();
+        });
     }
 
     onWindowResize() {
@@ -202,6 +210,7 @@ class GameEngine3D {
         projectileManager3D.clear();
 
         this.roundTimer = 99;
+        this.roundNumber = Math.max(1, this.p1Wins + this.p2Wins + 1);
         document.getElementById('round-timer').innerText = '99';
         if (this.timerInterval) clearInterval(this.timerInterval);
 
@@ -231,6 +240,11 @@ class GameEngine3D {
             if (this.gameState === 'FIGHTING' && this.roundTimer > 0) {
                 this.roundTimer--;
                 document.getElementById('round-timer').innerText = this.roundTimer;
+                if (this.roundTimer === 0) {
+                    const winner = this.p1.health >= this.p2.health ? this.p1 : this.p2;
+                    const loser = winner === this.p1 ? this.p2 : this.p1;
+                    this.onKnockout(winner, loser);
+                }
             }
         }, 1000);
     }
@@ -238,17 +252,20 @@ class GameEngine3D {
     handlePlayerInputs() {
         if (this.gameState !== 'FIGHTING') return;
 
-        if (this.keys['KeyA']) this.p1.moveLeft();
-        else if (this.keys['KeyD']) this.p1.moveRight();
+        const leftHeld = this.keys['KeyA'] || touchController.activeStates.left;
+        const rightHeld = this.keys['KeyD'] || touchController.activeStates.right;
+        if (leftHeld && !rightHeld) this.p1.moveLeft();
+        else if (rightHeld && !leftHeld) this.p1.moveRight();
         else this.p1.stopMove();
 
-        if (this.keys['KeyS']) this.p1.crouch();
+        if (this.keys['KeyS'] || touchController.activeStates.down) this.p1.crouch();
         else this.p1.uncrouch();
 
-        if (this.keys['KeyW']) this.p1.jump();
+        if (this.keys['KeyW'] || touchController.activeStates.up) this.p1.jump();
         if (this.keys['KeyF']) this.p1.punchLight();
         if (this.keys['KeyG']) this.p1.punchHeavy();
         if (this.keys['KeyH']) this.p1.kick();
+        if (this.keys['KeyQ'] || this.keys['ShiftLeft'] || this.keys['ShiftRight']) this.p1.block();
 
         if (this.keys['KeyS'] && this.keys['KeyD'] && this.keys['KeyF']) this.p1.special1();
         if (this.keys['KeyS'] && this.keys['KeyW'] && this.keys['KeyG']) this.p1.special2();
@@ -304,6 +321,7 @@ class GameEngine3D {
     }
 
     onKnockout(winner, loser) {
+        if (this.gameState === 'KO') return;
         this.gameState = 'KO';
         soundManager.stopFightBGM();
         if (winner.isP1) this.p1Wins++;
@@ -317,6 +335,41 @@ class GameEngine3D {
 
         const winnerName = ULTRA_ROSTER[winner.characterId].name;
         voiceEngine.announceWinner(winnerName);
+
+        const matchWon = winner.isP1 ? this.p1Wins >= 2 : this.p2Wins >= 2;
+        setTimeout(() => {
+            if (matchWon) {
+                text.innerText = `${winnerName} WINS THE MATCH!`;
+                this.showCombatAction('match-winner', winnerName);
+                setTimeout(() => {
+                    this.p1Wins = 0;
+                    this.p2Wins = 0;
+                    this.updateHUDWins();
+                    this.openCharSelect(this.gameMode);
+                }, 2200);
+            } else {
+                text.innerText = `ROUND ${this.roundNumber} COMPLETE`;
+                this.showCombatAction('next-round', `Round ${this.roundNumber + 1} starts next`);
+                setTimeout(() => this.startMatch(), 1600);
+            }
+        }, 1100);
+    }
+
+    showCombatAction(action, detail = '') {
+        const labels = {
+            lpunch: ['LIGHT PUNCH', 'F / TOUCH PUNCH'],
+            hpunch: ['HEAVY PUNCH', 'G / TOUCH H.PUNCH'],
+            kick: ['HIGH KICK', 'H / TOUCH KICK'],
+            block: ['GUARDING', 'Q or SHIFT / HOLD GUARD'],
+            spec1: ['SPECIAL 1', 'S + D + F / TOUCH FIREBALL'],
+            spec2: ['SPECIAL 2', 'S + W + G / TOUCH POWER RUSH'],
+            'match-winner': ['MATCH VICTORY', detail],
+            'next-round': ['NEXT ROUND', detail]
+        };
+        const result = labels[action] || ['READY', detail || 'Choose an action to enter the arena.'];
+        document.getElementById('combat-action').innerText = result[0];
+        document.getElementById('combat-detail').innerText = result[1];
+        document.getElementById('combat-status').classList.toggle('active', action !== 'ready');
     }
 
     updateHUDWins() {
