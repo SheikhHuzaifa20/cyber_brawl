@@ -1,28 +1,158 @@
 /* ==========================================================================
-   CYBER BRAWL 3D MOBILE VIRTUAL TOUCH CONTROLLER ENGINE
-   Binds touch & mouse events on virtual D-Pad and arcade attack action buttons.
+   CYBER BRAWL 3D VIP VIRTUAL ANALOG JOYSTICK & ARCADE CONTROLLER ENGINE
+   Interactive 360° Drag Joystick with 5 Core Combat Buttons:
+   1. ⚡ POWER [P]  2. 🥊 PUNCH [F/J]  3. 🦵 KICK [H/K]  4. 🥋 DAO [G/L]  5. 🛡️ GUARD [Q]
    ========================================================================== */
 
 class TouchControllerManager {
     constructor() {
         this.isEnabled = true;
+        this.isDraggingJoystick = false;
+        this.joystickPointerId = null;
+        this.baseCenter = { x: 0, y: 0 };
+        this.maxRadius = 50;
+
+        this.axisX = 0; // -1 (left) to +1 (right)
+        this.axisY = 0; // -1 (up) to +1 (down)
+
         this.activeStates = {
             up: false,
             down: false,
             left: false,
             right: false,
-            lpunch: false,
-            hpunch: false,
+            punch: false,
             kick: false,
-            spec1: false,
-            spec2: false,
+            dao: false,
+            power: false,
             block: false
         };
 
-        this.initListeners();
+        this.initJoystick();
+        this.initActionButtons();
     }
 
-    initListeners() {
+    initJoystick() {
+        const base = document.getElementById('joystick-base');
+        const stick = document.getElementById('joystick-stick');
+        const zone = document.getElementById('joystick-zone') || base;
+        if (!base || !stick) return;
+
+        const onPointerDown = (e) => {
+            if (e.cancelable) e.preventDefault();
+            this.isDraggingJoystick = true;
+            this.joystickPointerId = e.pointerId;
+            try {
+                if (base.setPointerCapture) base.setPointerCapture(e.pointerId);
+            } catch (err) {}
+
+            const rect = base.getBoundingClientRect();
+            this.baseCenter = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+            this.maxRadius = Math.max(35, rect.width * 0.38);
+
+            base.classList.add('joystick-active');
+            this.handleJoystickMove(e.clientX, e.clientY, stick);
+        };
+
+        const onPointerMove = (e) => {
+            if (!this.isDraggingJoystick) return;
+            if (this.joystickPointerId !== null && e.pointerId !== this.joystickPointerId) return;
+            if (e.cancelable) e.preventDefault();
+            this.handleJoystickMove(e.clientX, e.clientY, stick);
+        };
+
+        const onPointerUp = (e) => {
+            if (!this.isDraggingJoystick) return;
+            if (this.joystickPointerId !== null && e.pointerId !== this.joystickPointerId) return;
+            if (e.cancelable) e.preventDefault();
+            this.resetJoystick(stick, base);
+        };
+
+        base.addEventListener('pointerdown', onPointerDown);
+        if (zone !== base) zone.addEventListener('pointerdown', onPointerDown);
+
+        window.addEventListener('pointermove', onPointerMove, { passive: false });
+        window.addEventListener('pointerup', onPointerUp, { passive: false });
+        window.addEventListener('pointercancel', onPointerUp, { passive: false });
+    }
+
+    handleJoystickMove(clientX, clientY, stick) {
+        const dx = clientX - this.baseCenter.x;
+        const dy = clientY - this.baseCenter.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        let clampedDist = Math.min(dist, this.maxRadius);
+        let angle = Math.atan2(dy, dx);
+
+        const stickX = Math.cos(angle) * clampedDist;
+        const stickY = Math.sin(angle) * clampedDist;
+
+        stick.style.transform = `translate(${stickX}px, ${stickY}px)`;
+
+        // Normalized axes (-1 to +1)
+        this.axisX = (clampedDist > 8) ? stickX / this.maxRadius : 0;
+        this.axisY = (clampedDist > 8) ? stickY / this.maxRadius : 0;
+
+        const prevUp = this.activeStates.up;
+        const prevDown = this.activeStates.down;
+        const prevLeft = this.activeStates.left;
+        const prevRight = this.activeStates.right;
+
+        this.activeStates.left = this.axisX < -0.28;
+        this.activeStates.right = this.axisX > 0.28;
+        this.activeStates.up = this.axisY < -0.38;
+        this.activeStates.down = this.axisY > 0.35;
+
+        const p1 = window.gameInstance?.p1;
+        if (!p1 || window.gameInstance?.gameState !== 'FIGHTING') return;
+
+        // Jump impulse trigger on upward flick
+        if (this.activeStates.up && !prevUp) {
+            p1.jump();
+            window.gameInstance.showCombatAction('jump');
+        }
+
+        // Crouch state
+        if (this.activeStates.down && !prevDown) {
+            p1.crouch();
+        } else if (!this.activeStates.down && prevDown) {
+            p1.uncrouch();
+        }
+
+        // Horizontal movement (Fast combat advance vs retreat)
+        if (this.activeStates.left) {
+            p1.moveLeft();
+        } else if (this.activeStates.right) {
+            p1.moveRight();
+        } else if (prevLeft || prevRight) {
+            p1.stopMove();
+        }
+    }
+
+    resetJoystick(stick, base) {
+        this.isDraggingJoystick = false;
+        this.joystickPointerId = null;
+        this.axisX = 0;
+        this.axisY = 0;
+
+        stick.style.transform = `translate(0px, 0px)`;
+        base.classList.remove('joystick-active');
+
+        this.activeStates.left = false;
+        this.activeStates.right = false;
+        this.activeStates.up = false;
+        this.activeStates.down = false;
+
+        const p1 = window.gameInstance?.p1;
+        if (p1) {
+            p1.stopMove();
+            p1.uncrouch();
+        }
+    }
+
+    initActionButtons() {
         const bindButton = (id, keyName) => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -30,6 +160,7 @@ class TouchControllerManager {
             const startAction = (e) => {
                 if (e.cancelable) e.preventDefault();
                 this.activeStates[keyName] = true;
+                el.classList.add('active');
                 if (keyName === 'block') el.classList.add('guard-active');
                 this.triggerGameInput(keyName, true);
             };
@@ -37,14 +168,14 @@ class TouchControllerManager {
             const endAction = (e) => {
                 if (e.cancelable) e.preventDefault();
                 this.activeStates[keyName] = false;
-                if (keyName === 'block') el.classList.remove('guard-active');
+                el.classList.remove('active', 'guard-active');
                 this.triggerGameInput(keyName, false);
             };
 
             el.addEventListener('pointerdown', (e) => {
                 if (e.cancelable) e.preventDefault();
                 try {
-                    if (e.pointerId !== undefined) el.setPointerCapture?.(e.pointerId);
+                    if (e.pointerId !== undefined && el.setPointerCapture) el.setPointerCapture(e.pointerId);
                 } catch (error) {}
                 startAction(e);
             });
@@ -53,18 +184,11 @@ class TouchControllerManager {
             el.addEventListener('lostpointercapture', endAction);
         };
 
-        // Bind D-Pad
-        bindButton('btn-touch-up', 'up');
-        bindButton('btn-touch-down', 'down');
-        bindButton('btn-touch-left', 'left');
-        bindButton('btn-touch-right', 'right');
-
-        // Bind Action Attacks
-        bindButton('btn-touch-lpunch', 'lpunch');
-        bindButton('btn-touch-hpunch', 'hpunch');
+        // Bind the 5 VIP Combat Buttons
+        bindButton('btn-touch-power', 'power');
+        bindButton('btn-touch-punch', 'punch');
         bindButton('btn-touch-kick', 'kick');
-        bindButton('btn-touch-spec1', 'spec1');
-        bindButton('btn-touch-spec2', 'spec2');
+        bindButton('btn-touch-dao', 'dao');
         bindButton('btn-touch-block', 'block');
     }
 
@@ -75,21 +199,14 @@ class TouchControllerManager {
         if (!p1) return;
 
         if (isPressed) {
-            if (keyName === 'left') p1.moveLeft();
-            else if (keyName === 'right') p1.moveRight();
-            else if (keyName === 'up') p1.jump();
-            else if (keyName === 'down') p1.crouch();
-            else if (keyName === 'lpunch') p1.punchLight();
-            else if (keyName === 'hpunch') p1.punchHeavy();
+            if (keyName === 'power') p1.usePower();
+            else if (keyName === 'punch') p1.punch();
             else if (keyName === 'kick') p1.kick();
-            else if (keyName === 'spec1') p1.special1();
-            else if (keyName === 'spec2') p1.special2();
+            else if (keyName === 'dao') p1.daoStrike();
             else if (keyName === 'block') p1.block();
-            if (window.gameInstance) window.gameInstance.showCombatAction(keyName);
+            window.gameInstance.showCombatAction(keyName);
         } else {
-            if (keyName === 'left' || keyName === 'right') p1.stopMove();
-            else if (keyName === 'down') p1.uncrouch();
-            else if (keyName === 'block') p1.unblock();
+            if (keyName === 'block') p1.unblock();
         }
     }
 
@@ -97,10 +214,10 @@ class TouchControllerManager {
         if (!fighter) return;
         if (this.activeStates.left && !this.activeStates.right) fighter.moveLeft();
         else if (this.activeStates.right && !this.activeStates.left) fighter.moveRight();
-        else if (!this.activeStates.left && !this.activeStates.right) fighter.stopMove();
+        else if (!this.activeStates.left && !this.activeStates.right && !this.isDraggingJoystick) fighter.stopMove();
 
         if (this.activeStates.down) fighter.crouch();
-        else fighter.uncrouch();
+        else if (!this.isDraggingJoystick) fighter.uncrouch();
     }
 
     toggleVisibility() {

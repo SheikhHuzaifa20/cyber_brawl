@@ -1,12 +1,21 @@
 /* ==========================================================================
-   CYBER BRAWL 3D VOICE SYNTHESIZER ENGINE (MALE & FEMALE FIGHTERS)
-   Web Speech Synthesis & Formant SFX for Male/Female Battle Cries & Pain Grunts
+   CYBER BRAWL 3D VIP VOICE SYNTHESIZER & ARENA ANNOUNCER ENGINE
+   Web Speech Synthesis & Formant SFX for Real Battle Shouts & Announcer
    ========================================================================== */
 
 class VoiceEngine {
     constructor() {
         this.synth = window.speechSynthesis || null;
         this.enabled = true;
+    }
+
+    setMuted(muted) {
+        this.enabled = !muted;
+        if (muted && this.synth) {
+            try {
+                this.synth.cancel();
+            } catch (e) {}
+        }
     }
 
     speak(phrase, pitch = 1.0, rate = 1.1, forceFemale = false) {
@@ -24,40 +33,40 @@ class VoiceEngine {
                     const femaleVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Google US English')));
                     if (femaleVoice) utter.voice = femaleVoice;
                 } else {
-                    const maleVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Male') || v.name.includes('David')));
+                    const maleVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Google UK English Male')));
                     if (maleVoice) utter.voice = maleVoice;
                 }
             }
             this.synth.speak(utter);
-        } catch (e) {
-            console.error('Voice synth error:', e);
-        }
+        } catch (e) {}
     }
 
     playAttackCry(characterId, type) {
+        if (!this.enabled) return;
         const isFemale = characterId === 'mai' || characterId === 'athena';
-        const pitch = isFemale ? 1.5 : (characterId === 'titan' ? 0.6 : 0.9);
+        const pitch = isFemale ? 1.55 : (characterId === 'titan' ? 0.62 : 0.88);
 
-        if (type === 'SPECIAL_1') {
-            if (characterId === 'titan') this.speak('GROUND SHOCKWAVE!', pitch, 1.1);
-            else if (characterId === 'mai') this.speak('FIRE KUNAI BLAST!', pitch, 1.3, true);
-            else if (characterId === 'kyo') this.speak('HADOUKEN!', pitch, 1.2);
-            else this.speak('PLASMA SHIELD!', pitch, 1.3, true);
-        } else if (type === 'SPECIAL_2') {
-            if (characterId === 'titan') this.speak('POWER LARIAT!', pitch, 1.1);
-            else if (characterId === 'mai') this.speak('FLYING NINJA KICK!', pitch, 1.4, true);
-            else if (characterId === 'kyo') this.speak('SHORYUKEN!', pitch, 1.3);
-            else this.speak('LIGHTNING SURGE!', pitch, 1.4, true);
+        if (type === 'POWER') {
+            if (characterId === 'titan') this.speak('THUNDER VOLT SHOCKWAVE!', pitch, 1.15);
+            else if (characterId === 'mai') this.speak('PHOENIX FLAME BLAZE!', pitch, 1.35, true);
+            else if (characterId === 'kyo') this.speak('DRAGON HADOUKEN!', pitch, 1.25);
+            else this.speak('PSYCHO PLASMA WAVE!', pitch, 1.35, true);
+        } else if (type === 'DAO') {
+            if (characterId === 'titan') this.speak('TITAN CRUSH TAKEDOWN!', pitch, 1.15);
+            else if (characterId === 'mai') this.speak('SHINOBI SWEEP!', pitch, 1.4, true);
+            else if (characterId === 'kyo') this.speak('DRAGON SWEEP STRIKE!', pitch, 1.3);
+            else this.speak('PLASMA TACKLE!', pitch, 1.4, true);
+        } else if (type === 'KICK') {
+            const shouts = isFemale ? ['HYAH!', 'FLYING KICK!', 'CHESTO!'] : ['HYAH!', 'HIGH KICK!', 'TAKE THIS!'];
+            this.speak(shouts[Math.floor(Math.random() * shouts.length)], pitch, 1.4, isFemale);
         } else {
-            const maleShouts = ['HAH!', 'TAKE THIS!', 'HYAH!', 'HO!'];
-            const femaleShouts = ['HI-YA!', 'TAKE THAT!', 'HAH!', 'YAH!'];
-            const shouts = isFemale ? femaleShouts : maleShouts;
-            const shout = shouts[Math.floor(Math.random() * shouts.length)];
-            this.speak(shout, pitch, 1.4, isFemale);
+            const shouts = isFemale ? ['HI-YA!', 'TAKE THAT!', 'HAH!'] : ['HAH!', 'TAKE THIS!', 'STRIKE!'];
+            this.speak(shouts[Math.floor(Math.random() * shouts.length)], pitch, 1.4, isFemale);
         }
     }
 
     playHurtGrunt(characterId) {
+        if (!this.enabled) return;
         const isFemale = characterId === 'mai' || characterId === 'athena';
         const pitch = isFemale ? 1.6 : (characterId === 'titan' ? 0.55 : 0.8);
         const grunts = isFemale ? ['AAH!', 'KYAH!', 'OOF!', 'UGH!'] : ['OOF!', 'UGH!', 'ARGH!', 'GAH!'];
@@ -65,11 +74,13 @@ class VoiceEngine {
         this.speak(grunt, pitch, 1.5, isFemale);
     }
 
-    announceSelect() { this.speak('SELECT YOUR FIGHTER!', 0.85, 1.0); }
-    announceVS() { this.speak('BATTLE OF CHAMPIONS!', 0.85, 1.0); }
-    announceRound1() { this.speak('ROUND ONE... FIGHT!', 0.8, 1.1); }
-    announceKO() { this.speak('K.O.!', 0.7, 1.0); }
-    announceWinner(name) { this.speak(`${name} WINS! VICTORY!`, 0.85, 1.0); }
+    announceSelect() { if (this.enabled) this.speak('SELECT YOUR CHAMPION!', 0.85, 1.05); }
+    announceVS() { if (this.enabled) this.speak('CHAMPIONSHIP BRAWL! PREPARE TO FIGHT!', 0.85, 1.05); }
+    announceRound1() { if (this.enabled) this.speak('ROUND ONE... ENGAGE!', 0.82, 1.1); }
+    announceRound2() { if (this.enabled) this.speak('ROUND TWO... FIGHT!', 0.82, 1.1); }
+    announceFinalRound() { if (this.enabled) this.speak('FINAL ROUND... DECIDE YOUR DESTINY!', 0.80, 1.05); }
+    announceKO() { if (this.enabled) this.speak('K.O.!', 0.70, 1.0); }
+    announceWinner(name) { if (this.enabled) this.speak(`${name} WINS! PERFECT VICTORY!`, 0.85, 1.05); }
 }
 
 const voiceEngine = new VoiceEngine();

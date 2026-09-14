@@ -1,6 +1,6 @@
 /* ==========================================================================
-   CYBER CLASH CPU OPPONENT AI ENGINE
-   Dynamic decision tree for spacing, reactive blocking, combo execution & specials.
+   CYBER BRAWL 3D CPU OPPONENT AI ENGINE
+   Dynamic decision tree for 3D spacing, reactive blocking, combos & specials.
    ========================================================================== */
 
 class CPUController {
@@ -8,7 +8,7 @@ class CPUController {
         this.fighter = fighter;
         this.target = target;
         this.decisionTimer = 0;
-        this.reactionDelay = 12; // Decision frames
+        this.reactionDelay = 10; // Decision frames
     }
 
     update() {
@@ -23,8 +23,8 @@ class CPUController {
         const isTargetAttacking = this.target.isAttacking();
 
         // 1. Reactive Block Decision
-        if (isTargetAttacking && dist < 120) {
-            if (Math.random() < 0.75) {
+        if (isTargetAttacking && dist < 3.2) {
+            if (Math.random() < 0.65) {
                 this.fighter.block();
                 return;
             }
@@ -33,33 +33,37 @@ class CPUController {
         }
 
         // 2. Anti-Air Decision (If target is jumping near CPU)
-        if (!this.target.isGrounded && dist < 150) {
-            if (Math.random() < 0.8) {
-                this.fighter.special2(); // Dragon Uppercut Anti-Air
+        if (!this.target.isGrounded && dist < 3.5) {
+            if (Math.random() < 0.75) {
+                this.fighter.special2(); // Rising Dragon Uppercut Anti-Air
                 return;
             }
         }
 
-        // 3. Melee Attack Distance (< 100px)
-        if (dist < 100) {
+        // 3. Melee Attack Distance (dist < 2.4 units)
+        if (dist < 2.4) {
             const rand = Math.random();
-            if (rand < 0.35) {
+            if (rand < 0.30) {
                 this.fighter.punchLight();
-            } else if (rand < 0.65) {
+            } else if (rand < 0.55) {
                 this.fighter.kick();
-            } else if (rand < 0.85) {
+            } else if (rand < 0.75) {
                 this.fighter.punchHeavy();
+            } else if (rand < 0.90) {
+                this.fighter.kickHeavy();
             } else {
                 this.fighter.special2();
             }
             return;
         }
 
-        // 4. Mid Distance Spacing (100px - 280px)
-        if (dist >= 100 && dist <= 280) {
-            if (Math.random() < 0.4) {
-                this.fighter.special1(); // Projectile Blast
-            } else if (Math.random() < 0.7) {
+        // 4. Mid Distance Spacing (2.4 to 6.5 units)
+        if (dist >= 2.4 && dist <= 6.5) {
+            const rand = Math.random();
+            if (rand < 0.35) {
+                this.fighter.special1(); // Ki Hadouken Projectile
+            } else if (rand < 0.75) {
+                // Advance or retreat
                 if (this.fighter.x < this.target.x) this.fighter.moveRight();
                 else this.fighter.moveLeft();
             } else {
@@ -68,9 +72,9 @@ class CPUController {
             return;
         }
 
-        // 5. Far Distance Spacing (> 280px)
-        if (dist > 280) {
-            if (Math.random() < 0.5) {
+        // 5. Far Distance Spacing (> 6.5 units)
+        if (dist > 6.5) {
+            if (Math.random() < 0.40) {
                 this.fighter.special1();
             } else {
                 if (this.fighter.x < this.target.x) this.fighter.moveRight();

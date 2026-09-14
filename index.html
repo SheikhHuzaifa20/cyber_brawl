@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CYBER BRAWL 3D | ULTRA ARCADE CHAMPIONSHIP</title>
-    <meta name="description" content="An ultra VIP 3D arcade fighting game app featuring 3D male bodybuilders, female ninjas, WebGL arena lighting, voice battle cries, and dual controls.">
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>CYBER BRAWL 3D | ULTRA VIP ARCADE CHAMPIONSHIP</title>
+    <meta name="description" content="An ultra VIP 3D arcade fighting game featuring anime bodybuilders, female ninjas, realistic 3D arenas, virtual analog joystick, and 100% English interface.">
+    <link rel="stylesheet" href="styles.css?v=2.2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@600;700&family=Teko:wght@600;700&display=swap" rel="stylesheet">
     <!-- Three.js WebGL Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -19,20 +19,21 @@
 
         <!-- Overhead P1 / P2 Floating Markers -->
         <div id="p1-overhead-marker" class="overhead-marker p1-marker hidden">P1</div>
-        <div id="p2-overhead-marker" class="overhead-marker p2-marker hidden">P2</div>
+        <div id="p2-overhead-marker" class="overhead-marker p2-marker hidden">P2 / CPU</div>
 
-        <!-- In-Game HUD Layer -->
+        <!-- In-Game VIP Fighting HUD Layer -->
         <div id="hud-overlay" class="hud-layer hidden">
             <!-- Top Status Bar -->
             <div class="hud-top">
                 <!-- Player 1 Status -->
                 <div class="player-hud p1-hud">
                     <div class="fighter-portrait-box">
-                        <div id="p1-portrait" class="fighter-portrait titan-bg"></div>
+                        <img id="p1-portrait-img" src="images/titan.jpg" class="hud-hero-img" alt="Player 1">
+                        <span class="rank-tag">P1</span>
                     </div>
                     <div class="bars-container">
                         <div class="fighter-name-bar">
-                            <span id="p1-name" class="fighter-name">TITAN REX</span>
+                            <span id="p1-name" class="fighter-name">RAIDEN TITAN</span>
                             <span id="p1-score" class="fighter-wins">WINS: 0</span>
                         </div>
                         <div class="health-bar-wrapper">
@@ -40,18 +41,26 @@
                             <div id="p1-health-damage" class="health-bar-damage" style="width: 100%;"></div>
                         </div>
                         <div class="energy-bar-wrapper">
-                            <div id="p1-energy-fill" class="energy-bar-fill" style="width: 0%;"></div>
+                            <div id="p1-energy-fill" class="energy-bar-fill" style="width: 100%;"></div>
                             <span class="energy-label">DRIVE GAUGE MAX</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Center Timer & Stage -->
+                <!-- Center Timer, Stage & Top Utilities -->
                 <div class="hud-center">
+                    <div class="round-badge" id="round-number-badge">ROUND 1</div>
                     <div class="timer-box">
                         <span id="round-timer">99</span>
                     </div>
                     <div class="stage-name" id="stage-display">METROPOLIS CYBER ARENA</div>
+
+                    <!-- Top Utility Capsule (Completely off the bottom thumb area) -->
+                    <div class="hud-utility-bar">
+                        <button id="btn-pause-ingame" class="utility-icon-btn" title="Pause Fight">⏸</button>
+                        <button id="btn-audio-toggle" class="utility-icon-btn" title="Mute Audio & Voice">🔊</button>
+                        <button id="btn-touch-toggle" class="utility-icon-btn active" title="Toggle On-Screen Controls">🎮</button>
+                    </div>
                 </div>
 
                 <!-- Player 2 / CPU Status -->
@@ -59,24 +68,25 @@
                     <div class="bars-container">
                         <div class="fighter-name-bar">
                             <span id="p2-score" class="fighter-wins">WINS: 0</span>
-                            <span id="p2-name" class="fighter-name">MAI SHIRANUI</span>
+                            <span id="p2-name" class="fighter-name">MAI KASUMI</span>
                         </div>
                         <div class="health-bar-wrapper">
                             <div id="p2-health-fill" class="health-bar-fill" style="width: 100%;"></div>
                             <div id="p2-health-damage" class="health-bar-damage" style="width: 100%;"></div>
                         </div>
                         <div class="energy-bar-wrapper">
-                            <div id="p2-energy-fill" class="energy-bar-fill" style="width: 0%;"></div>
+                            <div id="p2-energy-fill" class="energy-bar-fill" style="width: 100%;"></div>
                             <span class="energy-label">DRIVE GAUGE MAX</span>
                         </div>
                     </div>
                     <div class="fighter-portrait-box">
-                        <div id="p2-portrait" class="fighter-portrait mai-bg"></div>
+                        <img id="p2-portrait-img" src="images/mai.jpg" class="hud-hero-img" alt="Player 2">
+                        <span class="rank-tag cpu">CPU</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Combo Banners -->
+            <!-- Combo Counters -->
             <div id="p1-combo" class="combo-banner p1-combo-banner hidden">
                 <span class="combo-count">3</span>
                 <span class="combo-text">HITS COMBO!</span>
@@ -91,87 +101,110 @@
                 <h1 id="announcer-text">FIGHT!</h1>
             </div>
 
+            <!-- Floating Combat Feed Indicator -->
             <div id="combat-status" class="combat-status">
                 <span class="status-kicker">COMBAT FEED</span>
                 <strong id="combat-action">READY</strong>
-                <span id="combat-detail">Choose an action to enter the arena.</span>
-            </div>
-
-            <!-- Bottom Control Bar -->
-            <div class="hud-bottom-bar">
-                <button id="btn-pause-ingame" class="hud-btn">⏸ PAUSE</button>
-                <button id="btn-touch-toggle" class="hud-btn highlight">📱 MOBILE TOUCH: ON</button>
-                <button id="btn-audio-toggle" class="hud-btn">🔊 MUTE VOICE & SFX</button>
-                <span class="controls-hint">PC: WASD + F/G/H | Mobile: Touch Virtual Arcade Buttons</span>
+                <span id="combat-detail">Press P for Power, F/J for Punch, H/K for Kick, G/L for Dao, Q for Guard.</span>
             </div>
         </div>
 
-        <!-- MOBILE VIRTUAL TOUCH CONTROLLER OVERLAY -->
+        <!-- INTERACTIVE 360° ANALOG JOYSTICK & 5 CORE COMBAT BUTTONS -->
         <div id="touch-controller-overlay" class="touch-overlay hidden">
-            <!-- Left D-Pad Joystick -->
-            <div class="virtual-dpad">
-                <button id="btn-touch-up" class="dpad-btn up">▲ JUMP</button>
-                <div class="dpad-row">
-                    <button id="btn-touch-left" class="dpad-btn left">◄ LEFT</button>
-                    <div class="dpad-center">🎮</div>
-                    <button id="btn-touch-right" class="dpad-btn right">RIGHT ►</button>
+            <!-- Left: 360° Analog Joystick Touch Zone -->
+            <div class="virtual-joystick-wrapper" id="joystick-zone">
+                <div id="joystick-base" class="joystick-base">
+                    <div class="joystick-ring"></div>
+                    <span class="joystick-compass n">▲</span>
+                    <span class="joystick-compass e">►</span>
+                    <span class="joystick-compass s">▼</span>
+                    <span class="joystick-compass w">◄</span>
+                    <div id="joystick-stick" class="joystick-stick">
+                        <div class="stick-core"></div>
+                    </div>
                 </div>
-                <button id="btn-touch-down" class="dpad-btn down">▼ CROUCH</button>
+                <div class="joystick-title">360° JOYSTICK</div>
             </div>
 
-            <!-- Right Action Buttons -->
-            <div class="virtual-actions">
-                <div class="action-row top">
-                    <button id="btn-touch-spec1" class="action-btn spec1"><span>💥</span><b>SPECIAL 1</b><small>FIREBALL</small></button>
-                    <button id="btn-touch-spec2" class="action-btn spec2"><span>⚡</span><b>SPECIAL 2</b><small>POWER RUSH</small></button>
+            <!-- Right: 5 Core Combat Buttons Cluster -->
+            <div class="virtual-arcade-cluster">
+                <!-- Top Row: Unique Power & Energy Guard -->
+                <div class="arcade-row row-top">
+                    <button id="btn-touch-power" class="arcade-btn btn-power" title="Unique Power Attack [P]">
+                        <span class="btn-glyph">⚡</span>
+                        <span class="btn-badge">POWER [P]</span>
+                    </button>
+                    <button id="btn-touch-block" class="arcade-btn btn-guard" title="Guard Shield [Q]">
+                        <span class="btn-glyph">🛡️</span>
+                        <span class="btn-badge">GUARD [Q]</span>
+                    </button>
                 </div>
-                <div class="action-row mid">
-                    <button id="btn-touch-lpunch" class="action-btn lpunch"><span>🥊</span><b>PUNCH</b><small>F</small></button>
-                    <button id="btn-touch-hpunch" class="action-btn hpunch"><span>💥</span><b>H.PUNCH</b><small>G</small></button>
+
+                <!-- Bottom Row: Punch, Kick & Dao Takedown -->
+                <div class="arcade-row row-bottom">
+                    <button id="btn-touch-punch" class="arcade-btn btn-punch" title="Punch Strike [F/J]">
+                        <span class="btn-glyph">🥊</span>
+                        <span class="btn-badge">PUNCH</span>
+                    </button>
+                    <button id="btn-touch-kick" class="arcade-btn btn-kick" title="Martial Kick [H/K]">
+                        <span class="btn-glyph">🦵</span>
+                        <span class="btn-badge">KICK</span>
+                    </button>
+                    <button id="btn-touch-dao" class="arcade-btn btn-dao" title="Dao Takedown Strike [G/L]">
+                        <span class="btn-glyph">🥋</span>
+                        <span class="btn-badge">DAO</span>
+                    </button>
                 </div>
-                <div class="action-row bot">
-                    <button id="btn-touch-kick" class="action-btn kick"><span>🦵</span><b>KICK</b><small>H</small></button>
-                    <button id="btn-touch-block" class="action-btn block"><span>🛡️</span><b>GUARD</b><small>Q / SHIFT</small></button>
-                </div>
+            </div>
+        </div>
+
+        <!-- MOBILE PORTRAIT ORIENTATION HELPER -->
+        <div id="orientation-overlay" class="orientation-overlay hidden">
+            <div class="orientation-card">
+                <div class="rotate-phone-icon">📱 ➔ 📲</div>
+                <h3>ROTATE TO LANDSCAPE</h3>
+                <p>For the best arcade fighting experience with full joystick and combat buttons, rotate your phone horizontally.</p>
+                <button id="btn-dismiss-orientation" class="cyber-btn primary">CONTINUE IN PORTRAIT</button>
             </div>
         </div>
 
         <!-- CINEMATIC 3D "VS" MATCH SCREEN -->
         <div id="vs-screen" class="ui-screen hidden vs-screen-style">
-            <div class="vs-header-banner">ULTRA CHAMPIONSHIP MATCH</div>
+            <div class="vs-header-banner">WORLD CHAMPIONSHIP MATCH</div>
             <div class="vs-showdown-box">
                 <!-- P1 Left Splash -->
                 <div class="vs-fighter-card p1-vs-card">
-                    <div class="vs-portrait titan-vs-img"></div>
+                    <img id="vs-p1-img" src="images/titan.jpg" class="vs-hero-img" alt="P1 Champion">
                     <div class="vs-info">
-                        <span id="vs-p1-name" class="vs-hero-title">TITAN REX</span>
-                        <div class="vs-badge">SUPER DIAMOND RANK</div>
-                        <div class="vs-sub">CLASS: MALE BODYBUILDER HEAVYWEIGHT</div>
+                        <span id="vs-p1-name" class="vs-hero-title">RAIDEN TITAN</span>
+                        <div class="vs-badge">SUPER DIAMOND RANK ★★★★★</div>
+                        <div class="vs-sub">POWER: ELECTRIC THUNDER SURGE</div>
                     </div>
                 </div>
 
                 <!-- Center Gold VS Emblem -->
                 <div class="vs-emblem-box">
                     <div class="vs-gold-emblem">VS</div>
+                    <span class="vs-clash-text">BATTLE OF DESTINY</span>
                 </div>
 
                 <!-- P2 Right Splash -->
                 <div class="vs-fighter-card p2-vs-card">
-                    <div class="vs-portrait mai-vs-img"></div>
+                    <img id="vs-p2-img" src="images/mai.jpg" class="vs-hero-img" alt="P2 Champion">
                     <div class="vs-info">
-                        <span id="vs-p2-name" class="vs-hero-title">MAI SHIRANUI</span>
-                        <div class="vs-badge">DIAMOND MASTER RANK</div>
-                        <div class="vs-sub">CLASS: FEMALE NINJA ASSASSIN</div>
+                        <span id="vs-p2-name" class="vs-hero-title">MAI KASUMI</span>
+                        <div class="vs-badge">DIAMOND MASTER RANK ★★★★☆</div>
+                        <div class="vs-sub">POWER: PHOENIX FLAME BLAZE</div>
                     </div>
                 </div>
             </div>
-            <div id="vs-stage-footer" class="vs-stage-footer">MAP: METROPOLIS CYBER ARENA</div>
+            <div id="vs-stage-footer" class="vs-stage-footer">ARENA: METROPOLIS CYBER ARENA</div>
         </div>
 
         <!-- MAIN MENU SCREEN -->
         <div id="menu-screen" class="ui-screen">
             <div class="arcade-title-box">
-                <div class="cyber-badge">ULTRA 3D ARCADE EDITION</div>
+                <div class="cyber-badge">ULTRA 3D ARCADE FIGHTER</div>
                 <h1 class="game-title">CYBER BRAWL 3D</h1>
                 <h2 class="game-subtitle">WORLD CHAMPIONSHIP</h2>
             </div>
@@ -183,11 +216,11 @@
                 </button>
                 <button id="btn-mode-2p" class="cyber-btn secondary">
                     <span class="btn-icon">👤 VS 👤</span>
-                    <span class="btn-text">2 PLAYER VERSUS</span>
+                    <span class="btn-text">2 PLAYER LOCAL VERSUS</span>
                 </button>
                 <button id="btn-mode-practice" class="cyber-btn tertiary">
                     <span class="btn-icon">🥋</span>
-                    <span class="btn-text">PRACTICE / TRAINING</span>
+                    <span class="btn-text">DOJO TRAINING MODE</span>
                 </button>
                 <button id="btn-controls-modal" class="cyber-btn outline">
                     <span class="btn-icon">🎮</span>
@@ -203,17 +236,19 @@
         <!-- CHARACTER SELECT SCREEN -->
         <div id="char-select-screen" class="ui-screen hidden">
             <h2 class="screen-title">SELECT YOUR CHAMPION</h2>
-            
+
             <div class="selection-arena">
                 <!-- P1 Card -->
                 <div class="select-preview-card p1-card">
                     <div class="preview-header">PLAYER 1</div>
-                    <div id="p1-select-portrait" class="select-portrait titan-thumb-bg"></div>
-                    <div id="p1-select-name" class="select-hero-name">TITAN REX</div>
+                    <div class="select-portrait-box">
+                        <img id="p1-select-img" src="images/titan.jpg" class="select-hero-img" alt="Player 1">
+                    </div>
+                    <div id="p1-select-name" class="select-hero-name">RAIDEN TITAN</div>
                     <div class="hero-stats">
                         <div class="stat-row"><span>POWER</span><div class="stat-bar"><div id="p1-stat-power" class="stat-fill" style="width: 98%;"></div></div></div>
-                        <div class="stat-row"><span>SPEED</span><div class="stat-bar"><div id="p1-stat-speed" class="stat-fill" style="width: 65%;"></div></div></div>
-                        <div class="stat-row"><span>DEFENSE</span><div class="stat-bar"><div id="p1-stat-defense" class="stat-fill" style="width: 90%;"></div></div></div>
+                        <div class="stat-row"><span>SPEED</span><div class="stat-bar"><div id="p1-stat-speed" class="stat-fill" style="width: 82%;"></div></div></div>
+                        <div class="stat-row"><span>DEFENSE</span><div class="stat-bar"><div id="p1-stat-defense" class="stat-fill" style="width: 92%;"></div></div></div>
                     </div>
                 </div>
 
@@ -221,34 +256,34 @@
                 <div class="roster-container">
                     <div class="roster-grid">
                         <div class="char-thumb selected-p1" data-id="titan">
-                            <div class="thumb-img titan-thumb"></div>
-                            <span class="thumb-name">TITAN REX</span>
-                            <span class="thumb-role">MALE BODYBUILDER</span>
+                            <img src="images/titan.jpg" class="thumb-img" alt="Raiden Titan">
+                            <span class="thumb-name">RAIDEN TITAN</span>
+                            <span class="thumb-role">THUNDER CHAMPION ⚡</span>
                         </div>
-                        <div class="char-thumb" data-id="mai">
-                            <div class="thumb-img mai-thumb"></div>
-                            <span class="thumb-name">MAI SHIRANUI</span>
-                            <span class="thumb-role">FEMALE NINJA</span>
+                        <div class="char-thumb selected-p2" data-id="mai">
+                            <img src="images/mai.jpg" class="thumb-img" alt="Mai Kasumi">
+                            <span class="thumb-name">MAI KASUMI</span>
+                            <span class="thumb-role">FLAME SHINOBI 🔥</span>
                         </div>
                         <div class="char-thumb" data-id="kyo">
-                            <div class="thumb-img kyo-thumb"></div>
-                            <span class="thumb-name">KYO KUSANAGI</span>
-                            <span class="thumb-role">FLAME BRAWLER</span>
+                            <img src="images/kyo.jpg" class="thumb-img" alt="Kyo Ryuken">
+                            <span class="thumb-name">KYO RYUKEN</span>
+                            <span class="thumb-role">DRAGON MASTER ☀️</span>
                         </div>
                         <div class="char-thumb" data-id="athena">
-                            <div class="thumb-img athena-thumb"></div>
-                            <span class="thumb-name">ATHENA ASAMI</span>
-                            <span class="thumb-role">FEMALE VALKYRIE</span>
+                            <img src="images/athena.jpg" class="thumb-img" alt="Valkyrie Athena">
+                            <span class="thumb-name">VALKYRIE ATHENA</span>
+                            <span class="thumb-role">CYBER WARRIOR 🌌</span>
                         </div>
                     </div>
 
                     <!-- Stage Selector -->
                     <div class="stage-selector-box">
-                        <label for="stage-select">CHOOSE STAGE MAP:</label>
+                        <label for="stage-select">SELECT 3D BATTLE ARENA:</label>
                         <select id="stage-select" class="cyber-select">
-                            <option value="metropolis">Metropolis Cyber Arena</option>
-                            <option value="dojo">Ancient Shrine Temple</option>
-                            <option value="volcano">Volcanic Magma Crater</option>
+                            <option value="metropolis">Metropolis Cyber Arena (Sky Ring)</option>
+                            <option value="dojo">Ancient Dragon Dojo (Sakura Shrine)</option>
+                            <option value="volcano">Volcanic Magma Crater (Lava Lake)</option>
                         </select>
                     </div>
 
@@ -261,12 +296,14 @@
                 <!-- P2 Card -->
                 <div class="select-preview-card p2-card">
                     <div class="preview-header" id="p2-header-label">PLAYER 2 / CPU</div>
-                    <div id="p2-select-portrait" class="select-portrait mai-thumb-bg"></div>
-                    <div id="p2-select-name" class="select-hero-name">MAI SHIRANUI</div>
+                    <div class="select-portrait-box">
+                        <img id="p2-select-img" src="images/mai.jpg" class="select-hero-img" alt="Player 2">
+                    </div>
+                    <div id="p2-select-name" class="select-hero-name">MAI KASUMI</div>
                     <div class="hero-stats">
-                        <div class="stat-row"><span>POWER</span><div class="stat-bar"><div id="p2-stat-power" class="stat-fill" style="width: 75%;"></div></div></div>
-                        <div class="stat-row"><span>SPEED</span><div class="stat-bar"><div id="p2-stat-speed" class="stat-fill" style="width: 98%;"></div></div></div>
-                        <div class="stat-row"><span>DEFENSE</span><div class="stat-bar"><div id="p2-stat-defense" class="stat-fill" style="width: 65%;"></div></div></div>
+                        <div class="stat-row"><span>POWER</span><div class="stat-bar"><div id="p2-stat-power" class="stat-fill" style="width: 85%;"></div></div></div>
+                        <div class="stat-row"><span>SPEED</span><div class="stat-bar"><div id="p2-stat-speed" class="stat-fill" style="width: 99%;"></div></div></div>
+                        <div class="stat-row"><span>DEFENSE</span><div class="stat-bar"><div id="p2-stat-defense" class="stat-fill" style="width: 72%;"></div></div></div>
                     </div>
                 </div>
             </div>
@@ -275,8 +312,8 @@
         <!-- PAUSE OVERLAY -->
         <div id="pause-screen" class="ui-screen hidden modal-overlay">
             <div class="modal-card">
-                <h2 id="modal-title" class="modal-header">MATCH PAUSED</h2>
-                <div id="modal-body" class="modal-content">
+                <h2 class="modal-header">MATCH PAUSED</h2>
+                <div class="modal-content">
                     <button id="btn-resume" class="cyber-btn primary">RESUME FIGHT</button>
                     <button id="btn-restart" class="cyber-btn secondary">RESTART MATCH</button>
                     <button id="btn-change-fighters" class="cyber-btn tertiary">CHANGE FIGHTERS</button>
@@ -288,50 +325,48 @@
         <!-- CONTROLS & KEY GUIDE MODAL -->
         <div id="controls-modal" class="ui-screen hidden modal-overlay">
             <div class="modal-card wide">
-                <h2 class="modal-header">3D CONTROLS & KEY BINDINGS GUIDE</h2>
+                <h2 class="modal-header">3D CONTROLS & MOVE GUIDE</h2>
                 <div class="controls-grid">
                     <div class="control-column">
-                        <h3>💻 PC KEYBOARD BINDINGS</h3>
+                        <h3>💻 PC KEYBOARD CONTROLS</h3>
                         <ul>
-                            <li><kbd>W</kbd> - Jump Up</li>
-                            <li><kbd>S</kbd> - Crouch Down</li>
-                            <li><kbd>A</kbd> - Move Left</li>
-                            <li><kbd>D</kbd> - Move Right</li>
-                            <li><kbd>Q</kbd> or <kbd>SHIFT</kbd> - Hold Guard / Block</li>
-                            <li><kbd>F</kbd> - Light Punch (+ Voice Shout)</li>
-                            <li><kbd>G</kbd> - Heavy Punch (+ Voice Shout)</li>
-                            <li><kbd>H</kbd> - High Kick (+ Voice Shout)</li>
-                            <li><kbd>S</kbd> + <kbd>D</kbd> + <kbd>F</kbd> - 💥 <strong>Special 1 Fireball / Kunai Blast</strong></li>
-                            <li><kbd>S</kbd> + <kbd>W</kbd> + <kbd>G</kbd> - ⚡ <strong>Special 2 Dragon Uppercut / Flying Kick</strong></li>
+                            <li><kbd>P</kbd> - ⚡ <strong>UNIQUE POWER ATTACK</strong> (Electric/Fire/Plasma)</li>
+                            <li><kbd>F</kbd> or <kbd>J</kbd> - 🥊 <strong>PUNCH STRIKE</strong> (Jab)</li>
+                            <li><kbd>H</kbd> or <kbd>K</kbd> - 🦵 <strong>MARTIAL KICK</strong></li>
+                            <li><kbd>G</kbd> or <kbd>L</kbd> - 🥋 <strong>DAO TAKEDOWN</strong> (Lunge Sweep)</li>
+                            <li><kbd>Q</kbd> or <kbd>SHIFT</kbd> - 🛡️ <strong>GUARD SHIELD</strong> (Hold Block)</li>
+                            <li><kbd>D</kbd> - 🏃 <strong>FAST COMBAT DASH FORWARD</strong></li>
+                            <li><kbd>A</kbd> - 🚶 <strong>RETREAT SPACING</strong></li>
+                            <li><kbd>W</kbd> - ⬆️ <strong>JUMP</strong></li>
+                            <li><kbd>S</kbd> - ⬇️ <strong>CROUCH</strong></li>
                         </ul>
                     </div>
                     <div class="control-column">
-                        <h3>📱 MOBILE TOUCH CONTROLS</h3>
+                        <h3>📱 TOUCH & JOYSTICK CONTROLS</h3>
                         <ul>
-                            <li><strong>Virtual Joystick D-Pad</strong> - Touch ▲ Jump / ▼ Crouch / ◄ Left / Right ►</li>
-                            <li><strong>Punch Button</strong> - Light Punch</li>
-                            <li><strong>H.Punch Button</strong> - Heavy Punch</li>
-                            <li><strong>Kick Button</strong> - High Kick</li>
-                            <li><strong>Special 1 Button</strong> - 💥 Fireball / Kunai Projectile</li>
-                            <li><strong>Special 2 Button</strong> - ⚡ Flying Uppercut / Kick</li>
-                            <li><strong>Guard Button</strong> - 🛡️ Guard Stance</li>
+                            <li><strong>360° Analog Joystick</strong> - Drag right for fast combat dash, up to jump, down to crouch</li>
+                            <li><strong>⚡ POWER Button</strong> - Launch character's unique elemental energy blast</li>
+                            <li><strong>🥊 PUNCH Button</strong> - Fast boxing punch</li>
+                            <li><strong>🦵 KICK Button</strong> - High martial arts kick</li>
+                            <li><strong>🥋 DAO Button</strong> - Leaping takedown grapple sweep</li>
+                            <li><strong>🛡️ GUARD Button</strong> - Deploy energy block shield</li>
                         </ul>
                     </div>
                 </div>
-                <button id="btn-close-controls" class="cyber-btn primary">CLOSE GUIDE</button>
+                <button id="btn-close-controls" class="cyber-btn primary">CLOSE MOVE GUIDE</button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="js/audio.js"></script>
-    <script src="js/voice.js"></script>
-    <script src="js/particles.js"></script>
-    <script src="js/touchControls.js"></script>
-    <script src="js/stage3d.js"></script>
-    <script src="js/fighter3d.js"></script>
-    <script src="js/projectiles3d.js"></script>
-    <script src="js/ai.js"></script>
-    <script src="js/game.js"></script>
+    <!-- Engine Scripts with Cache Busting -->
+    <script src="js/audio.js?v=2.2"></script>
+    <script src="js/voice.js?v=2.2"></script>
+    <script src="js/particles.js?v=2.2"></script>
+    <script src="js/touchControls.js?v=2.2"></script>
+    <script src="js/stage3d.js?v=2.2"></script>
+    <script src="js/fighter3d.js?v=2.2"></script>
+    <script src="js/projectiles3d.js?v=2.2"></script>
+    <script src="js/ai.js?v=2.2"></script>
+    <script src="js/game.js?v=2.2"></script>
 </body>
 </html>
