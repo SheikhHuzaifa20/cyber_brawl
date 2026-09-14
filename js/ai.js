@@ -35,7 +35,7 @@ class CPUController {
         // 2. Anti-Air Decision (If target is jumping near CPU)
         if (!this.target.isGrounded && dist < 3.5) {
             if (Math.random() < 0.75) {
-                this.fighter.special2(); // Rising Dragon Uppercut Anti-Air
+                this.fighter.daoStrike(); // Rising Dragon Uppercut Anti-Air
                 return;
             }
         }
@@ -44,15 +44,15 @@ class CPUController {
         if (dist < 2.4) {
             const rand = Math.random();
             if (rand < 0.30) {
-                this.fighter.punchLight();
+                this.fighter.punch();
             } else if (rand < 0.55) {
                 this.fighter.kick();
             } else if (rand < 0.75) {
-                this.fighter.punchHeavy();
+                this.fighter.punch();
             } else if (rand < 0.90) {
-                this.fighter.kickHeavy();
+                this.fighter.kick();
             } else {
-                this.fighter.special2();
+                this.fighter.daoStrike();
             }
             return;
         }
@@ -61,7 +61,7 @@ class CPUController {
         if (dist >= 2.4 && dist <= 6.5) {
             const rand = Math.random();
             if (rand < 0.35) {
-                this.fighter.special1(); // Ki Hadouken Projectile
+                this.fighter.usePower(); // Ki Hadouken Projectile
             } else if (rand < 0.75) {
                 // Advance or retreat
                 if (this.fighter.x < this.target.x) this.fighter.moveRight();
@@ -75,7 +75,7 @@ class CPUController {
         // 5. Far Distance Spacing (> 6.5 units)
         if (dist > 6.5) {
             if (Math.random() < 0.40) {
-                this.fighter.special1();
+                this.fighter.usePower();
             } else {
                 if (this.fighter.x < this.target.x) this.fighter.moveRight();
                 else this.fighter.moveLeft();

@@ -10,11 +10,22 @@ class GameEngine3D {
         // Three.js Core Setup
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: false });
+        const isSmallDevice = window.innerWidth <= 900 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+        try {
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: this.canvas,
+                antialias: !isSmallDevice,
+                alpha: false,
+                powerPreference: 'high-performance'
+            });
+        } catch (error) {
+            this.showWebGLError();
+            return;
+        }
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmallDevice ? 1 : 1.5));
+        this.renderer.shadowMap.enabled = !isSmallDevice;
+        this.renderer.shadowMap.type = isSmallDevice ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
 
         this.camera.position.set(0, 3.6, 12.5);
         this.camera.lookAt(0, 2, 0);
@@ -41,6 +52,7 @@ class GameEngine3D {
         this.p1Wins = 0;
         this.p2Wins = 0;
         this.roundNumber = 1;
+        this.lastHudUpdate = 0;
 
         this.keys = {};
         this.orientationDismissed = false;
@@ -49,6 +61,14 @@ class GameEngine3D {
         this.initInputListeners();
         this.onWindowResize();
         this.startLoop();
+    }
+
+    showWebGLError() {
+        this.canvas.style.display = 'none';
+        const message = document.createElement('div');
+        message.className = 'webgl-error-message';
+        message.innerHTML = '<h2>3D graphics are unavailable</h2><p>Please enable hardware acceleration or update your browser, then reload the game.</p>';
+        document.getElementById('app-container').appendChild(message);
     }
 
     initDOMListeners() {
@@ -196,6 +216,7 @@ class GameEngine3D {
     }
 
     onWindowResize() {
+        if (!this.renderer) return;
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -526,19 +547,20 @@ class GameEngine3D {
     }
 
     updateHUD() {
+        const now = performance.now();
+        if (now - this.lastHudUpdate < 80) return;
+        this.lastHudUpdate = now;
+
         const p1Pct = (this.p1.health / this.p1.maxHealth * 100);
         const p2Pct = (this.p2.health / this.p2.maxHealth * 100);
 
         document.getElementById('p1-health-fill').style.width = p1Pct + '%';
         document.getElementById('p2-health-fill').style.width = p2Pct + '%';
 
-        // Staggered damage ghost bar
-        setTimeout(() => {
-            const d1 = document.getElementById('p1-health-damage');
-            const d2 = document.getElementById('p2-health-damage');
-            if (d1) d1.style.width = p1Pct + '%';
-            if (d2) d2.style.width = p2Pct + '%';
-        }, 180);
+        const d1 = document.getElementById('p1-health-damage');
+        const d2 = document.getElementById('p2-health-damage');
+        if (d1) d1.style.width = p1Pct + '%';
+        if (d2) d2.style.width = p2Pct + '%';
 
         document.getElementById('p1-energy-fill').style.width = this.p1.energy + '%';
         document.getElementById('p2-energy-fill').style.width = this.p2.energy + '%';
