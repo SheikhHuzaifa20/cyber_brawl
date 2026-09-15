@@ -190,9 +190,9 @@ class GameEngine3D {
                     this.p1.kick();
                     this.showCombatAction('kick');
                 }
-                // Key G or L: DAO TAKEDOWN
+                // Key G or L: DAO GRAPPLE SLAM
                 if (e.code === 'KeyG' || e.code === 'KeyL') {
-                    this.p1.daoStrike();
+                    this.p1.daoStrike(this.p2);
                     this.showCombatAction('dao');
                 }
                 // Key Q or Shift: GUARD
@@ -366,12 +366,15 @@ class GameEngine3D {
         setTimeout(() => {
             text.innerText = 'FIGHT!';
             setTimeout(() => {
+                // Force-hide and clear the announcer banner
                 banner.classList.add('hidden');
+                banner.style.display = 'none';
+                text.innerText = '';
                 this.gameState = 'FIGHTING';
                 soundManager.startFightBGM();
                 this.startTimer();
                 this.checkOrientation();
-            }, 600);
+            }, 550);
         }, 800);
     }
 
@@ -420,7 +423,7 @@ class GameEngine3D {
             if (this.keys['ArrowUp']) this.p2.jump();
             if (this.keys['Numpad1']) this.p2.punch();
             if (this.keys['Numpad2']) this.p2.kick();
-            if (this.keys['Numpad3']) this.p2.daoStrike();
+            if (this.keys['Numpad3']) this.p2.daoStrike(this.p1);
             if (this.keys['Numpad0']) this.p2.usePower();
         } else if (this.gameMode === 'CPU' && this.cpu) {
             this.cpu.update();
@@ -474,6 +477,7 @@ class GameEngine3D {
 
         const banner = document.getElementById('announcer-banner');
         const text = document.getElementById('announcer-text');
+        banner.style.display = '';      // Restore after force-hide
         banner.classList.remove('hidden');
         text.innerText = 'K.O.!';
 

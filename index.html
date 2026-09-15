@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>CYBER BRAWL 3D | ULTRA VIP ARCADE CHAMPIONSHIP</title>
     <meta name="description" content="An ultra VIP 3D arcade fighting game featuring anime bodybuilders, female ninjas, realistic 3D arenas, virtual analog joystick, and 100% English interface.">
-    <link rel="stylesheet" href="styles.css?v=2.2">
+    <link rel="stylesheet" href="styles.css?v=2.3">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@600;700&family=Teko:wght@600;700&display=swap" rel="stylesheet">
@@ -14,6 +14,13 @@
 </head>
 <body>
     <div id="app-container">
+        <!-- Animated Canvas Video Background Layer -->
+        <div class="video-bg-container" id="video-bg-container">
+            <!-- Procedural animated arena: rendered into a canvas by stage3d.js if no video -->
+            <canvas id="bgAnimCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.55;pointer-events:none;z-index:0;"></canvas>
+            <div class="video-overlay-tint"></div>
+        </div>
+
         <!-- 3D WebGL Canvas -->
         <canvas id="gameCanvas"></canvas>
 
@@ -132,11 +139,13 @@
                 <div class="arcade-row row-top">
                     <button id="btn-touch-power" class="arcade-btn btn-power" title="Unique Power Attack [P]">
                         <span class="btn-glyph">⚡</span>
-                        <span class="btn-badge">POWER [P]</span>
+                        <span class="btn-badge">POWER</span>
+                        <span class="btn-key-badge">[ P ]</span>
                     </button>
                     <button id="btn-touch-block" class="arcade-btn btn-guard" title="Guard Shield [Q]">
                         <span class="btn-glyph">🛡️</span>
-                        <span class="btn-badge">GUARD [Q]</span>
+                        <span class="btn-badge">GUARD</span>
+                        <span class="btn-key-badge">[ Q / SHIFT ]</span>
                     </button>
                 </div>
 
@@ -145,17 +154,33 @@
                     <button id="btn-touch-punch" class="arcade-btn btn-punch" title="Punch Strike [F/J]">
                         <span class="btn-glyph">🥊</span>
                         <span class="btn-badge">PUNCH</span>
+                        <span class="btn-key-badge">[ F / J ]</span>
                     </button>
                     <button id="btn-touch-kick" class="arcade-btn btn-kick" title="Martial Kick [H/K]">
                         <span class="btn-glyph">🦵</span>
                         <span class="btn-badge">KICK</span>
+                        <span class="btn-key-badge">[ H / K ]</span>
                     </button>
-                    <button id="btn-touch-dao" class="arcade-btn btn-dao" title="Dao Takedown Strike [G/L]">
+                    <button id="btn-touch-dao" class="arcade-btn btn-dao" title="Dao Slam [G/L]">
                         <span class="btn-glyph">🥋</span>
-                        <span class="btn-badge">DAO</span>
+                        <span class="btn-badge">DAO SLAM</span>
+                        <span class="btn-key-badge">[ G / L ]</span>
                     </button>
                 </div>
             </div>
+        </div>
+
+        <!-- PC Desktop Keyboard Controls Guide Bar (hidden on mobile) -->
+        <div class="desktop-controls-bar" id="desktop-controls-bar">
+            <span>⬅️ <kbd>A</kbd> Retreat</span>
+            <span>➡️ <kbd>D</kbd> Advance</span>
+            <span>⬆️ <kbd>W</kbd> Jump</span>
+            <span>⬇️ <kbd>S</kbd> Crouch</span>
+            <span>🥊 <kbd>F</kbd>/<kbd>J</kbd> Punch</span>
+            <span>🦵 <kbd>H</kbd>/<kbd>K</kbd> Kick</span>
+            <span>🥋 <kbd>G</kbd>/<kbd>L</kbd> DAO Slam</span>
+            <span>⚡ <kbd>P</kbd> Power</span>
+            <span>🛡️ <kbd>Q</kbd> Guard</span>
         </div>
 
         <!-- MOBILE PORTRAIT ORIENTATION HELPER -->
@@ -359,13 +384,13 @@
     </div>
 
     <!-- Engine Scripts with Cache Busting -->
-    <script src="js/audio.js?v=2.2"></script>
-    <script src="js/voice.js?v=2.2"></script>
-    <script src="js/particles.js?v=2.2"></script>
-    <script src="js/touchControls.js?v=2.2"></script>
-    <script src="js/stage3d.js?v=2.2"></script>
-    <script src="js/fighter3d.js?v=2.2"></script>
-    <script src="js/projectiles3d.js?v=2.2"></script>
+    <script src="js/audio.js?v=2.3"></script>
+    <script src="js/voice.js?v=2.3"></script>
+    <script src="js/particles.js?v=2.3"></script>
+    <script src="js/touchControls.js?v=2.3"></script>
+    <script src="js/stage3d.js?v=2.3"></script>
+    <script src="js/fighter3d.js?v=2.3"></script>
+    <script src="js/projectiles3d.js?v=2.3"></script>
     <script src="js/ai.js?v=2.3"></script>
     <script src="js/game.js?v=2.3"></script>
 </body>

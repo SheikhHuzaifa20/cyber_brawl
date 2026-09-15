@@ -113,10 +113,15 @@ class Fighter3D {
         this.facing = isP1 ? 1 : -1;
         this.isGrounded = true;
 
-        this.speedForward = 0.23;  // Fast combat dash advance
-        this.speedBackward = 0.13; // Tactical retreat spacing
-        this.jumpForce = 0.40;
+        this.speedForward  = 0.11;  // Natural fighting advance (not too fast)
+        this.speedBackward = 0.07;  // Careful retreat
+        this.jumpForce = 0.38;
         this.gravity = 0.019;
+
+        // DAO grapple state
+        this.daoGrappleTarget  = null;
+        this.daoGrappleTimer   = 0;
+        this.daoGrapplePhase   = 'NONE'; // 'LIFT' | 'HOLD' | 'SLAM'
 
         this.maxHealth = 100;
         this.health = 100;
@@ -530,6 +535,69 @@ class Fighter3D {
             return;
         }
 
+        // DAO GRAPPLE SLAM phases
+        if (this.state === 'DAO_STRIKE' && this.daoGrappleTarget) {
+            this.daoGrappleTimer--;
+            const t = this.daoGrappleTimer;
+            const tgt = this.daoGrappleTarget;
+
+            if (t > 34) {
+                // LIFT phase: hoist enemy above head
+                this.daoGrapplePhase = 'LIFT';
+                tgt.state = 'HURT';
+                tgt.hitStunTimer = 50;
+                // Float enemy above attacker
+                tgt.x = this.x + this.facing * 0.4;
+                tgt.y = 2.2 + (52 - t) * 0.06;
+                tgt.vx = 0;
+                tgt.vy = 0;
+            } else if (t > 14) {
+                // HOLD phase: hold high overhead for a beat
+                this.daoGrapplePhase = 'HOLD';
+                tgt.x = this.x + this.facing * 0.4;
+                tgt.y = 3.2;
+                tgt.vx = 0;
+                tgt.vy = 0;
+            } else {
+                // SLAM phase: violently drive enemy into ground
+                this.daoGrapplePhase = 'SLAM';
+                const slamProgress = (14 - t) / 14;
+                tgt.x = this.x + this.facing * 0.4;
+                tgt.y = Math.max(0, 3.2 - slamProgress * 3.2);
+                if (t === 13 && window.gameInstance) {
+                    // Impact moment
+                    soundManager.playKick();
+                    soundManager.playHeavyPunch();
+                    window.gameInstance.shakeCamera(0.6, 16);
+                    if (!this.hasHitEnemy) {
+                        this.hasHitEnemy = true;
+                        tgt.takeDamage(this.activeHitbox.damage, this.activeHitbox.stun, this);
+                    }
+                }
+                if (t <= 0) {
+                    // Clean up grapple
+                    tgt.y = 0;
+                    tgt.vx = 0;
+                    this.daoGrappleTarget = null;
+                    this.daoGrapplePhase = 'NONE';
+                }
+            }
+
+            if (this.daoGrappleTimer <= 0) {
+                this.state = 'IDLE';
+                this.attackTimer = 0;
+                this.activeHitbox = null;
+                this.hasHitEnemy = false;
+                this.daoGrappleTarget = null;
+                this.daoGrapplePhase = 'NONE';
+            }
+
+            this.group.rotation.y = this.facing === 1 ? Math.PI / 2 : -Math.PI / 2;
+            this.applyPhysics();
+            this.updateSkeletalPose();
+            return;
+        }
+
         if (!this.isAttacking()) {
             this.facing = (this.x < enemy.x) ? 1 : -1;
         }
@@ -739,15 +807,34 @@ class Fighter3D {
         this.activeHitbox = { damage: 14, stun: 18 };
     }
 
-    // 3. DAO (Takedown / Grapple Sweep) [G / L]
-    daoStrike() {
+    // 3. DAO GRAPPLE SLAM — lift enemy overhead, body-slam onto the floor [G / L]
+    daoStrike(enemy) {
         if (!this.canAttack()) return;
+        const dist = Math.abs(this.x - (enemy ? enemy.x : this.x));
+
+        // Must be close enough to grab (lunge forward if needed)
+        if (dist > 3.5) {
+            // Quick lunge dash toward opponent
+            this.vx = 0.18 * this.facing;
+            this.state = 'DASH_FORWARD';
+            this.attackTimer = 8;
+            return;
+        }
+
+        // Close enough — initiate grapple
         this.state = 'DAO_STRIKE';
-        this.attackTimer = 24;
-        this.vx = 0.32 * this.facing; // Rapid lunging tackle step!
+        this.attackTimer = 52;          // Total animation frames
+        this.vx = 0.06 * this.facing;   // Slow close-in
+        this.hasHitEnemy = false;
+
+        // Set grapple data
+        this.daoGrappleTarget = enemy;
+        this.daoGrappleTimer  = 52;
+        this.daoGrapplePhase  = 'LIFT';
+
         soundManager.playHeavyPunch();
         voiceEngine.playAttackCry(this.characterId, 'DAO');
-        this.activeHitbox = { damage: 20, stun: 26 };
+        this.activeHitbox = { damage: 26, stun: 38 };
     }
 
     // 4. POWER (Electric / Fire / Solar / Plasma) [P]

@@ -415,3 +415,245 @@ class Stage3DRenderer {
         });
     }
 }
+
+/* ==========================================================================
+   VIP ANIMATED CYBERPUNK CITY BACKGROUND (Procedural Canvas 2D)
+   Draws a live animated background: neon skyscrapers, flying cars,
+   spotlight laser beams, hologram grids, and neon particle rain.
+   Runs behind the 3D canvas for an ultra-premium visual feel.
+   ========================================================================== */
+
+class BgCityCanvas {
+    constructor() {
+        this.canvas = document.getElementById('bgAnimCanvas');
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this.t = 0;
+        this.cars = this._spawnCars(14);
+        this.particles = this._spawnParticles(80);
+        this.beams = this._spawnBeams(5);
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+        this._loop();
+    }
+
+    resize() {
+        if (!this.canvas) return;
+        this.canvas.width  = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.W = this.canvas.width;
+        this.H = this.canvas.height;
+        this.buildings = this._buildSkyline();
+    }
+
+    _buildSkyline() {
+        const W = this.W, H = this.H;
+        const buildings = [];
+        const neonCols = ['#00f0ff','#a855f7','#ec4899','#fbbf24','#10b981','#f97316'];
+        let x = 0;
+        while (x < W) {
+            const w = 35 + Math.random() * 90;
+            const h = H * 0.25 + Math.random() * H * 0.45;
+            const color = neonCols[Math.floor(Math.random() * neonCols.length)];
+            buildings.push({ x, y: H - h, w, h, color, windows: [] });
+            // Generate windows
+            const winsX = Math.floor(w / 16);
+            const winsY = Math.floor(h / 20);
+            for (let wy = 0; wy < winsY; wy++) {
+                for (let wx = 0; wx < winsX; wx++) {
+                    buildings[buildings.length-1].windows.push({
+                        dx: 6 + wx * 16,
+                        dy: 10 + wy * 20,
+                        lit: Math.random() > 0.38
+                    });
+                }
+            }
+            x += w + 4;
+        }
+        return buildings;
+    }
+
+    _spawnCars(n) {
+        const cars = [];
+        for (let i = 0; i < n; i++) {
+            cars.push({
+                x: Math.random() * (this.W || 800),
+                y: 60 + Math.random() * ((this.H || 600) * 0.5),
+                speed: 1.5 + Math.random() * 3.5,
+                lane: Math.random() > 0.5 ? 1 : -1,
+                color: ['#00f0ff','#f97316','#a855f7','#fbbf24','#ec4899'][Math.floor(Math.random()*5)],
+                len: 28 + Math.random() * 36
+            });
+        }
+        return cars;
+    }
+
+    _spawnParticles(n) {
+        const p = [];
+        for (let i = 0; i < n; i++) {
+            p.push({
+                x: Math.random() * (this.W || 800),
+                y: Math.random() * (this.H || 600),
+                vy: 0.4 + Math.random() * 1.2,
+                alpha: 0.3 + Math.random() * 0.7,
+                size: 1 + Math.random() * 2
+            });
+        }
+        return p;
+    }
+
+    _spawnBeams(n) {
+        const b = [];
+        for (let i = 0; i < n; i++) {
+            b.push({
+                x: (i / n) * (this.W || 800) + 60,
+                angle: -Math.PI / 3 + Math.random() * (Math.PI / 1.5),
+                speed: 0.004 + Math.random() * 0.008,
+                color: ['rgba(0,240,255,0.22)','rgba(168,85,247,0.2)','rgba(251,191,36,0.18)'][i % 3]
+            });
+        }
+        return b;
+    }
+
+    _loop() {
+        this.t++;
+        this._draw();
+        requestAnimationFrame(() => this._loop());
+    }
+
+    _draw() {
+        if (!this.ctx || !this.buildings) return;
+        const ctx = this.ctx;
+        const W = this.W, H = this.H, t = this.t;
+
+        // ── Sky Gradient ──
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+        skyGrad.addColorStop(0, '#020617');
+        skyGrad.addColorStop(0.55, '#0c1133');
+        skyGrad.addColorStop(1, '#130c25');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        // ── Neon Horizon Glow ──
+        const hGrad = ctx.createLinearGradient(0, H * 0.52, 0, H * 0.72);
+        hGrad.addColorStop(0, 'rgba(0,240,255,0.14)');
+        hGrad.addColorStop(0.5, 'rgba(168,85,247,0.09)');
+        hGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = hGrad;
+        ctx.fillRect(0, H * 0.52, W, H * 0.2);
+
+        // ── Spotlight Laser Beams ──
+        this.beams.forEach(b => {
+            b.angle += b.speed * Math.sin(t * 0.02);
+            ctx.save();
+            ctx.translate(b.x, H * 0.95);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            const len = H * 1.1;
+            ctx.lineTo(Math.sin(b.angle) * len, -Math.cos(b.angle) * len * 0.85);
+            ctx.lineWidth = 18;
+            ctx.strokeStyle = b.color;
+            ctx.stroke();
+            ctx.restore();
+        });
+
+        // ── Neon Grid Floor ──
+        const gridY = H * 0.72;
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 0.7;
+        const scroll = (t * 1.2) % 40;
+        for (let gx = -40; gx < W + 40; gx += 40) {
+            ctx.beginPath();
+            ctx.moveTo(gx, gridY);
+            ctx.lineTo(W / 2 + (gx - W / 2) * 2.5, H + 40);
+            ctx.stroke();
+        }
+        for (let gy = 0; gy < H - gridY + 40; gy += 28) {
+            const prog = (gy + scroll) / (H - gridY);
+            const ty = gridY + gy - scroll;
+            const xs = W / 2 - (W * 1.8 * prog) / 2;
+            const xe = W / 2 + (W * 1.8 * prog) / 2;
+            ctx.beginPath();
+            ctx.moveTo(xs, ty);
+            ctx.lineTo(xe, ty);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // ── Buildings ──
+        this.buildings.forEach(bld => {
+            // Body
+            ctx.fillStyle = '#0b1222';
+            ctx.fillRect(bld.x, bld.y, bld.w, bld.h);
+
+            // Neon edge glow
+            ctx.save();
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = bld.color;
+            ctx.strokeStyle = bld.color;
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = 0.65 + 0.2 * Math.sin(t * 0.03 + bld.x);
+            ctx.strokeRect(bld.x, bld.y, bld.w, bld.h);
+            ctx.restore();
+
+            // Windows
+            bld.windows.forEach(win => {
+                if (!win.lit) return;
+                ctx.fillStyle = `rgba(255, 230, 140, ${0.35 + 0.2 * Math.sin(t * 0.04 + bld.x + win.dy)})`;
+                ctx.fillRect(bld.x + win.dx, bld.y + win.dy, 8, 10);
+            });
+
+            // Rooftop antenna blink
+            ctx.save();
+            ctx.globalAlpha = (t % 60 < 30) ? 0.9 : 0.1;
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(bld.x + bld.w / 2, bld.y - 6, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+
+        // ── Flying Cars with Trails ──
+        this.cars.forEach(car => {
+            car.x += car.speed * car.lane;
+            if (car.lane === 1 && car.x > W + 80) car.x = -80;
+            if (car.lane === -1 && car.x < -80) car.x = W + 80;
+
+            // Trail
+            const trailGrad = ctx.createLinearGradient(car.x - car.lane * car.len, car.y, car.x, car.y);
+            trailGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            trailGrad.addColorStop(1, car.color);
+            ctx.strokeStyle = trailGrad;
+            ctx.lineWidth = 3;
+            ctx.shadowColor = car.color;
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.moveTo(car.x - car.lane * car.len, car.y);
+            ctx.lineTo(car.x, car.y);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Car body
+            ctx.fillStyle = car.color;
+            ctx.fillRect(car.x - 10 * car.lane, car.y - 4, 18, 8);
+        });
+
+        // ── Neon Rain Particles ──
+        this.particles.forEach(p => {
+            p.y += p.vy;
+            if (p.y > H) { p.y = 0; p.x = Math.random() * W; }
+            ctx.globalAlpha = p.alpha * 0.6;
+            ctx.fillStyle = '#00f0ff';
+            ctx.fillRect(p.x, p.y, p.size, p.size * 4);
+        });
+        ctx.globalAlpha = 1;
+    }
+}
+
+// Start animated background on DOM load
+window.addEventListener('DOMContentLoaded', () => {
+    new BgCityCanvas();
+});
+
