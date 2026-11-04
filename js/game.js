@@ -10,11 +10,10 @@ class GameEngine3D {
         // Three.js Core Setup
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const isSmallDevice = window.innerWidth <= 900 || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
         try {
             this.renderer = new THREE.WebGLRenderer({
                 canvas: this.canvas,
-                antialias: !isSmallDevice,
+                antialias: false,
                 alpha: false,
                 powerPreference: 'high-performance'
             });
@@ -23,9 +22,10 @@ class GameEngine3D {
             return;
         }
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmallDevice ? 1 : 1.5));
-        this.renderer.shadowMap.enabled = !isSmallDevice;
-        this.renderer.shadowMap.type = isSmallDevice ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
+        // A 1x render buffer cuts GPU work substantially on typical laptop displays.
+        this.maxPixelRatio = 1;
+        this.renderer.setPixelRatio(1);
+        this.renderer.shadowMap.enabled = false;
 
         this.camera.position.set(0, 3.6, 12.5);
         this.camera.lookAt(0, 2, 0);
@@ -36,6 +36,7 @@ class GameEngine3D {
         this.gameState = 'MENU';
         this.gameMode = 'CPU';
         this.selectedPlayerCharacter = 'titan';
+        this.practiceLevel = 1;
 
         // Initialize 3D Fighters (Titan vs Mai)
         this.p1 = new Fighter3D('p1', 'titan', -4, true, false);
@@ -75,6 +76,15 @@ class GameEngine3D {
     initDOMListeners() {
         document.getElementById('btn-mode-cpu').addEventListener('click', () => this.openCharSelect('CPU'));
         document.getElementById('btn-mode-practice').addEventListener('click', () => this.openCharSelect('PRACTICE'));
+        document.getElementById('btn-practice-next').addEventListener('click', () => {
+            this.practiceLevel++;
+            document.getElementById('practice-selection-level').innerText = this.practiceLevel;
+            this.setOpponentCharacter(this.getOpponentForLevel(this.practiceLevel));
+            this.triggerVSScreenAndStart();
+        });
+        document.getElementById('btn-practice-retry').addEventListener('click', () => this.triggerVSScreenAndStart());
+        document.getElementById('btn-practice-levels').addEventListener('click', () => this.openCharSelect('PRACTICE'));
+        document.getElementById('btn-practice-menu').addEventListener('click', () => this.showScreen('menu-screen'));
         document.getElementById('btn-controls-modal').addEventListener('click', () => this.showModal('controls-modal'));
         document.getElementById('btn-close-controls').addEventListener('click', () => this.hideModal('controls-modal'));
 
@@ -85,11 +95,15 @@ class GameEngine3D {
             });
         });
 
-        // Stage Selector
-        const stageSelect = document.getElementById('stage-select');
-        if (stageSelect) {
-            stageSelect.addEventListener('change', (e) => {
-                const sId = e.target.value;
+        // Arena preview cards update both the preview highlight and 3D stage.
+        document.querySelectorAll('.arena-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const sId = card.dataset.stage;
+                document.querySelectorAll('.arena-card').forEach(option => {
+                    const selected = option === card;
+                    option.classList.toggle('selected', selected);
+                    option.setAttribute('aria-pressed', selected ? 'true' : 'false');
+                });
                 this.stage.setStage(sId);
                 const stageNames = {
                     metropolis: 'METROPOLIS CYBER ARENA',
@@ -100,7 +114,7 @@ class GameEngine3D {
                 document.getElementById('stage-display').innerText = sName;
                 document.getElementById('vs-stage-footer').innerText = `ARENA: ${sName}`;
             });
-        }
+        });
 
         document.getElementById('btn-start-match').addEventListener('click', () => this.triggerVSScreenAndStart());
         document.getElementById('btn-back-to-menu').addEventListener('click', () => this.showScreen('menu-screen'));
@@ -235,31 +249,51 @@ class GameEngine3D {
 
     openCharSelect(mode) {
         this.gameMode = mode;
-        document.getElementById('p2-header-label').innerText = mode === 'PRACTICE' ? 'TRAINING DUMMY' : 'CPU OPPONENT';
+        if (mode === 'PRACTICE') this.practiceLevel = 1;
+        document.getElementById('char-select-screen').classList.toggle('practice-mode', mode === 'PRACTICE');
+        document.getElementById('practice-selection-level').innerText = this.practiceLevel;
+        document.getElementById('p2-header-label').innerText = 'AUTO-SELECTED CPU';
+        this.setOpponentCharacter(this.getOpponentForLevel(mode === 'PRACTICE' ? this.practiceLevel : 1));
         this.showScreen('char-select-screen');
         voiceEngine.announceSelect();
         this.checkOrientation();
     }
 
+    getOpponentForLevel(level) {
+        const fighters = Object.keys(ULTRA_ROSTER);
+        const playerIndex = Math.max(0, fighters.indexOf(this.p1.characterId));
+        const offset = ((Math.max(1, level) - 1) % (fighters.length - 1)) + 1;
+        return fighters[(playerIndex + offset) % fighters.length];
+    }
+
+    setOpponentCharacter(charId) {
+        if (this.p2.characterId !== charId) {
+            this.scene.remove(this.p2.group);
+            this.p2 = new Fighter3D('p2', charId, 4, false, true);
+            this.scene.add(this.p2.group);
+        }
+        this.updateCharacterSelectionUI();
+    }
+
     selectRosterChar(charId) {
         this.selectedPlayerCharacter = charId;
-        const opponentCharacter = charId === 'titan' ? 'mai' : 'titan';
         if (this.p1.characterId !== charId) {
             this.scene.remove(this.p1.group);
             this.p1 = new Fighter3D('p1', charId, -4, true, false);
             this.scene.add(this.p1.group);
         }
-        if (this.p2.characterId !== opponentCharacter) {
-            this.scene.remove(this.p2.group);
-            this.p2 = new Fighter3D('p2', opponentCharacter, 4, false, true);
-            this.scene.add(this.p2.group);
-        }
+        this.setOpponentCharacter(this.getOpponentForLevel(this.gameMode === 'PRACTICE' ? this.practiceLevel : 1));
+    }
 
+    updateCharacterSelectionUI() {
         document.querySelectorAll('.char-thumb').forEach(t => {
             const id = t.getAttribute('data-id');
             t.classList.remove('selected-p1', 'selected-p2');
-            t.setAttribute('aria-pressed', id === charId ? 'true' : 'false');
-            if (id === charId) t.classList.add('selected-p1');
+            const isP1 = id === this.p1.characterId;
+            const isP2 = id === this.p2.characterId;
+            t.setAttribute('aria-pressed', isP1 || isP2 ? 'true' : 'false');
+            if (isP1) t.classList.add('selected-p1');
+            if (isP2) t.classList.add('selected-p2');
         });
 
         const p1Data = ULTRA_ROSTER[this.p1.characterId];
@@ -288,18 +322,18 @@ class GameEngine3D {
         // Update Real Portrait Images
         const p1Img = document.getElementById('p1-portrait-img');
         const p2Img = document.getElementById('p2-portrait-img');
-        if (p1Img) p1Img.src = `images/${this.p1.characterId}.jpg`;
-        if (p2Img) p2Img.src = `images/${this.p2.characterId}.jpg`;
+        if (p1Img) p1Img.src = `images/${this.p1.characterId}_sprite.jpg`;
+        if (p2Img) p2Img.src = `images/${this.p2.characterId}_sprite.jpg`;
 
         const p1SelImg = document.getElementById('p1-select-img');
         const p2SelImg = document.getElementById('p2-select-img');
-        if (p1SelImg) p1SelImg.src = `images/${this.p1.characterId}.jpg`;
-        if (p2SelImg) p2SelImg.src = `images/${this.p2.characterId}.jpg`;
+        if (p1SelImg) p1SelImg.src = `images/${this.p1.characterId}_sprite.jpg`;
+        if (p2SelImg) p2SelImg.src = `images/${this.p2.characterId}_sprite.jpg`;
 
         const vs1Img = document.getElementById('vs-p1-img');
         const vs2Img = document.getElementById('vs-p2-img');
-        if (vs1Img) vs1Img.src = `images/${this.p1.characterId}.jpg`;
-        if (vs2Img) vs2Img.src = `images/${this.p2.characterId}.jpg`;
+        if (vs1Img) vs1Img.src = `images/${this.p1.characterId}_sprite.jpg`;
+        if (vs2Img) vs2Img.src = `images/${this.p2.characterId}_sprite.jpg`;
     }
 
     showScreen(screenId) {
@@ -312,7 +346,7 @@ class GameEngine3D {
         if (screenId !== 'none') {
             document.getElementById(screenId).classList.remove('hidden');
         }
-        this.gameState = screenId === 'menu-screen' ? 'MENU' : (screenId === 'char-select-screen' ? 'CHAR_SELECT' : 'FIGHTING');
+        this.gameState = screenId === 'menu-screen' ? 'MENU' : (screenId === 'char-select-screen' ? 'CHAR_SELECT' : (screenId === 'vs-screen' ? 'VS' : (screenId === 'practice-win-screen' ? 'PRACTICE_WIN' : 'FIGHTING')));
         soundManager.stopFightBGM();
     }
 
@@ -347,21 +381,24 @@ class GameEngine3D {
         document.getElementById('p1-overhead-marker').classList.remove('hidden');
         document.getElementById('p2-overhead-marker').classList.remove('hidden');
 
+        const isPractice = this.gameMode === 'PRACTICE';
+        this.p2.maxHealth = isPractice ? 100 + (this.practiceLevel - 1) * 8 : 100;
         this.p1.resetPosition(-4);
         this.p2.resetPosition(4);
-
-        if (this.gameMode === 'CPU') this.cpu = new CPUController(this.p2, this.p1);
+        this.p2.isTrainingDummy = isPractice;
+        if (this.gameMode === 'CPU' || isPractice) this.cpu = new CPUController(this.p2, this.p1, isPractice ? this.practiceLevel : 1);
         else this.cpu = null;
 
-        const isPractice = this.gameMode === 'PRACTICE';
-        this.p2.isTrainingDummy = isPractice;
+        this.p1.health = this.p1.maxHealth;
+        this.p2.health = this.p2.maxHealth;
         const p2Rank = document.querySelector('.p2-hud .rank-tag');
-        if (p2Rank) p2Rank.innerText = isPractice ? 'DUMMY' : 'CPU';
-        document.getElementById('combat-action').innerText = isPractice ? 'TRAINING' : 'READY';
+        if (p2Rank) p2Rank.innerText = isPractice ? `LV ${this.practiceLevel}` : 'CPU';
+        document.getElementById('combat-action').innerText = isPractice ? `LEVEL ${this.practiceLevel}` : 'READY';
         document.getElementById('combat-detail').innerText = isPractice
             ? 'Practice freely: A/D or arrows move · W/↑ jump · F punch · H kick · G slam · P power'
             : 'Move with A/D or arrows · Jump with W/↑ · Punch with F · Kick with H';
 
+        if (isPractice) document.getElementById('combat-detail').innerText = 'Defeat the CPU to advance. Your health is protected in practice.';
         projectileManager3D.clear();
 
         this.roundTimer = 99;
@@ -370,7 +407,7 @@ class GameEngine3D {
 
         const roundBadge = document.getElementById('round-number-badge');
         if (isPractice) {
-            roundBadge.innerText = 'TRAINING';
+            roundBadge.innerText = `LEVEL ${this.practiceLevel}`;
         } else if (this.roundNumber >= 3) {
             roundBadge.innerText = 'FINAL ROUND';
         } else {
@@ -421,6 +458,31 @@ class GameEngine3D {
         }, 1000);
     }
 
+    damagePracticeDummy(damage, attacker) {
+        this.p2.takeDamage(damage, 12, attacker);
+        if (this.p2.health <= 0) {
+            this.finishPracticeLevel();
+            return;
+        }
+        this.p2.state = 'HURT';
+        this.p2.hitStunTimer = 12;
+        this.p2.isGrounded = true;
+        this.p2.y = 0;
+    }
+
+    finishPracticeLevel() {
+        if (this.gameState !== 'FIGHTING') return;
+        const nextLevel = this.practiceLevel + 1;
+        const nextOpponent = ULTRA_ROSTER[this.getOpponentForLevel(nextLevel)].name;
+        document.getElementById('practice-win-title').innerText = `LEVEL ${this.practiceLevel} CLEAR!`;
+        document.getElementById('practice-win-copy').innerText = `Next up: ${nextOpponent}. The CPU gets tougher every level.`;
+        const nextButton = document.getElementById('btn-practice-next');
+        nextButton.innerText = `CONTINUE TO LEVEL ${nextLevel}`;
+        nextButton.classList.remove('hidden');
+        soundManager.stopFightBGM();
+        this.showScreen('practice-win-screen');
+    }
+
     handlePlayerInputs() {
         if (this.gameState !== 'FIGHTING') return;
 
@@ -435,10 +497,7 @@ class GameEngine3D {
         else this.p1.uncrouch();
         if (this.gameMode === 'CPU' && this.cpu) {
             this.cpu.update();
-        } else if (this.gameMode === 'PRACTICE' && this.p2) {
-            this.p2.stopMove();
-            this.p2.unblock();
-        }
+        } else if (this.gameMode === 'PRACTICE' && this.cpu) this.cpu.update();
     }
 
     checkCollisions() {
@@ -451,11 +510,7 @@ class GameEngine3D {
             this.p1.hasHitEnemy = true;
             const dmg = this.p1.activeHitbox ? this.p1.activeHitbox.damage : 12;
             if (this.gameMode === 'PRACTICE') {
-                this.p2.state = 'HURT';
-                this.p2.hitStunTimer = 12;
-                this.p2.isGrounded = true;
-                this.p2.y = 0;
-                this.p2.health = this.p2.maxHealth;
+                this.damagePracticeDummy(dmg, this.p1);
             } else this.p2.takeDamage(dmg, 18, this.p1);
             this.shakeCamera(0.38, 9);
             if (this.p2.health <= 0 && this.gameMode !== 'PRACTICE') this.onKnockout(this.p1, this.p2);
@@ -478,9 +533,7 @@ class GameEngine3D {
             if (Math.abs(proj.x - target.x) < 1.6) {
                 proj.destroy();
                 if (this.gameMode === 'PRACTICE' && target === this.p2) {
-                    target.state = 'HURT';
-                    target.hitStunTimer = 12;
-                    target.health = target.maxHealth;
+                    this.damagePracticeDummy(proj.damage, attacker);
                 } else if (!(this.gameMode === 'PRACTICE' && target === this.p1)) {
                     target.takeDamage(proj.damage, 24, attacker);
                 }
@@ -620,7 +673,12 @@ class GameEngine3D {
     }
 
     update() {
-        if (this.gameState === 'MENU' || this.gameState === 'CHAR_SELECT') return;
+        if (this.gameState !== 'FIGHTING' && this.gameState !== 'PAUSED' && this.gameState !== 'KO') return;
+
+        if (this.gameState !== 'FIGHTING') {
+            this.updateOverheadMarkers();
+            return;
+        }
 
         this.handlePlayerInputs();
         this.p1.update(this.p2);
@@ -649,6 +707,8 @@ class GameEngine3D {
     }
 
     render() {
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, this.maxPixelRatio);
+        if (this.renderer.getPixelRatio() !== pixelRatio) this.renderer.setPixelRatio(pixelRatio);
         this.renderer.render(this.scene, this.camera);
     }
 }

@@ -300,11 +300,28 @@ class Fighter3D {
             headGroup.add(eyeGroup);
         });
 
+        // Readable anime face details: ears, nose bridge, mouth and lower lip.
+        const earGeo = new THREE.SphereGeometry(0.095, 12, 10);
+        [-1, 1].forEach(side => {
+            const ear = new THREE.Mesh(earGeo, matSkin);
+            ear.scale.set(0.72, 1.2, 0.65);
+            ear.position.set(side * 0.33, -0.015, -0.005);
+            headGroup.add(ear);
+        });
+
         // Anime Nose
         const noseMesh = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.06, 4), matSkin);
         noseMesh.rotation.x = -Math.PI / 4;
         noseMesh.position.set(0, -0.05, 0.36);
         headGroup.add(noseMesh);
+
+        const mouthMat = new THREE.MeshBasicMaterial({ color: 0x512b32 });
+        const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.025, 0.022), mouthMat);
+        mouth.position.set(0, -0.19, 0.343);
+        headGroup.add(mouth);
+        const lowerLip = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.014, 0.018), new THREE.MeshBasicMaterial({ color: 0xb76561 }));
+        lowerLip.position.set(0, -0.222, 0.34);
+        headGroup.add(lowerLip);
 
         // 4. ANIME HAIR
         const hairGroup = new THREE.Group();
@@ -400,14 +417,35 @@ class Fighter3D {
         rightElbow.add(rForearm);
 
         // Knuckle Plates
-        const fistGeo = new THREE.BoxGeometry(forearmSize * 1.35, forearmSize * 1.1, forearmSize * 1.25);
-        const lFist = new THREE.Mesh(fistGeo, matGloves);
-        lFist.position.y = -0.75;
-        leftElbow.add(lFist);
+        const makeHand = (elbow, side) => {
+            const hand = new THREE.Group();
+            hand.position.set(side * 0.025, -0.73, 0.015);
+            elbow.add(hand);
 
-        const rFist = new THREE.Mesh(fistGeo, matGloves);
-        rFist.position.y = -0.75;
-        rightElbow.add(rFist);
+            const palm = new THREE.Mesh(new THREE.SphereGeometry(forearmSize * 0.62, 12, 10), matSkin);
+            palm.scale.set(1.0, 0.82, 0.72);
+            hand.add(palm);
+
+            const fingerGeo = new THREE.CylinderGeometry(forearmSize * 0.13, forearmSize * 0.16, forearmSize * 0.48, 8);
+            for (let finger = 0; finger < 4; finger++) {
+                const digit = new THREE.Mesh(fingerGeo, matSkin);
+                digit.position.set((finger - 1.5) * forearmSize * 0.22, -forearmSize * 0.48, forearmSize * 0.1);
+                digit.rotation.z = (finger - 1.5) * 0.08;
+                hand.add(digit);
+            }
+            const thumb = new THREE.Mesh(new THREE.CylinderGeometry(forearmSize * 0.12, forearmSize * 0.15, forearmSize * 0.4, 8), matSkin);
+            thumb.position.set(side * forearmSize * 0.48, -forearmSize * 0.12, forearmSize * 0.14);
+            thumb.rotation.z = side * 0.75;
+            hand.add(thumb);
+
+            const cuff = new THREE.Mesh(new THREE.TorusGeometry(forearmSize * 0.48, 0.035, 6, 12), matGold);
+            cuff.position.y = forearmSize * 0.34;
+            cuff.rotation.x = Math.PI / 2;
+            hand.add(cuff);
+            return hand;
+        };
+        const lFist = makeHand(leftElbow, -1);
+        const rFist = makeHand(rightElbow, 1);
 
         const knucklePlateGeo = new THREE.BoxGeometry(forearmSize * 1.1, 0.08, forearmSize * 0.9);
         const lPlate = new THREE.Mesh(knucklePlateGeo, matMetal);
@@ -840,8 +878,8 @@ class Fighter3D {
 
     // 4. POWER (Electric / Fire / Solar / Plasma) [P]
     usePower() {
-        if (!this.canAttack()) return;
-        this.energy = Math.max(0, this.energy - 20);
+        if (!this.canAttack() || this.energy < 100) return false;
+        this.energy = 0;
         this.state = 'POWER_ATTACK';
         this.attackTimer = 22;
 
@@ -858,6 +896,7 @@ class Fighter3D {
             charData.powerColor,
             charData.powerType
         );
+        return true;
     }
 
     takeDamage(damage, stunFrames, attacker) {
@@ -876,7 +915,7 @@ class Fighter3D {
 
         attacker.combo++;
         attacker.comboTimer = 90;
-        attacker.energy = Math.min(100, attacker.energy + 15);
+        attacker.energy = Math.min(100, attacker.energy + 20);
 
         if (this.health <= 0) {
             soundManager.playKO();

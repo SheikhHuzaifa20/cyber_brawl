@@ -35,7 +35,7 @@
                 <!-- Player 1 Status -->
                 <div class="player-hud p1-hud">
                     <div class="fighter-portrait-box">
-                        <img id="p1-portrait-img" src="images/titan.jpg" class="hud-hero-img" alt="Player 1">
+                        <img id="p1-portrait-img" src="images/titan_sprite.jpg" class="hud-hero-img" alt="Player 1">
                         <span class="rank-tag">P1</span>
                     </div>
                     <div class="bars-container">
@@ -49,7 +49,7 @@
                         </div>
                         <div class="energy-bar-wrapper">
                             <div id="p1-energy-fill" class="energy-bar-fill" style="width: 100%;"></div>
-                            <span class="energy-label">DRIVE GAUGE MAX</span>
+                            <span class="energy-label">POWER CHARGE</span>
                         </div>
                     </div>
                 </div>
@@ -83,11 +83,11 @@
                         </div>
                         <div class="energy-bar-wrapper">
                             <div id="p2-energy-fill" class="energy-bar-fill" style="width: 100%;"></div>
-                            <span class="energy-label">DRIVE GAUGE MAX</span>
+                            <span class="energy-label">POWER CHARGE</span>
                         </div>
                     </div>
                     <div class="fighter-portrait-box">
-                        <img id="p2-portrait-img" src="images/mai.jpg" class="hud-hero-img" alt="Player 2">
+                        <img id="p2-portrait-img" src="images/mai_sprite.jpg" class="hud-hero-img" alt="Player 2">
                         <span class="rank-tag cpu">CPU</span>
                     </div>
                 </div>
@@ -198,7 +198,7 @@
             <div class="vs-showdown-box">
                 <!-- P1 Left Splash -->
                 <div class="vs-fighter-card p1-vs-card">
-                    <img id="vs-p1-img" src="images/titan.jpg" class="vs-hero-img" alt="P1 Champion">
+                    <img id="vs-p1-img" src="images/titan_sprite.jpg" class="vs-hero-img" alt="P1 Champion">
                     <div class="vs-info">
                         <span id="vs-p1-name" class="vs-hero-title">RAIDEN TITAN</span>
                         <div class="vs-badge">SUPER DIAMOND RANK ★★★★★</div>
@@ -214,7 +214,7 @@
 
                 <!-- P2 Right Splash -->
                 <div class="vs-fighter-card p2-vs-card">
-                    <img id="vs-p2-img" src="images/mai.jpg" class="vs-hero-img" alt="P2 Champion">
+                    <img id="vs-p2-img" src="images/mai_sprite.jpg" class="vs-hero-img" alt="P2 Champion">
                     <div class="vs-info">
                         <span id="vs-p2-name" class="vs-hero-title">MAI KASUMI</span>
                         <div class="vs-badge">DIAMOND MASTER RANK ★★★★☆</div>
@@ -269,7 +269,7 @@
                 <div class="select-preview-card p1-card">
                     <div class="preview-header">YOUR FIGHTER</div>
                     <div class="select-portrait-box">
-                        <img id="p1-select-img" src="images/titan.jpg" class="select-hero-img" alt="Player 1">
+                        <img id="p1-select-img" src="images/titan_sprite.jpg" class="select-hero-img" alt="Player 1">
                     </div>
                     <div id="p1-select-name" class="select-hero-name">RAIDEN TITAN</div>
                     <div class="hero-stats">
@@ -281,38 +281,51 @@
 
                 <!-- Roster Grid -->
                 <div class="roster-container">
+                    <div class="practice-level-picker" id="practice-level-picker" aria-label="Practice levels">
+                        <div class="arena-picker-heading"><span>ENDLESS PRACTICE LADDER</span><small>Each win brings a tougher CPU and a new fighter</small></div>
+                        <div class="practice-ladder-preview"><span class="level-number">∞</span><span><strong>LEVEL <b id="practice-selection-level">1</b> READY</strong><small>Win to advance. The challenge keeps growing.</small></span></div>
+                    </div>
                     <div class="roster-heading"><span>FIGHTER ROSTER</span><small>Choose your champion</small></div>
                     <div class="roster-grid">
                         <button type="button" class="char-thumb selected-p1" data-id="titan" aria-pressed="true">
-                            <img src="images/titan.jpg" class="thumb-img" alt="Raiden Titan">
+                            <img src="images/titan_sprite.jpg" class="thumb-img" alt="Raiden Titan">
                             <span class="thumb-name">RAIDEN TITAN</span>
                             <span class="thumb-role">THUNDER CHAMPION ⚡</span>
                         </button>
-                        <button type="button" class="char-thumb" data-id="mai" aria-pressed="false">
-                            <img src="images/mai.jpg" class="thumb-img" alt="Mai Kasumi">
+                        <button type="button" class="char-thumb selected-p2" data-id="mai" aria-pressed="true">
+                            <img src="images/mai_sprite.jpg" class="thumb-img" alt="Mai Kasumi">
                             <span class="thumb-name">MAI KASUMI</span>
                             <span class="thumb-role">FLAME SHINOBI 🔥</span>
                         </button>
                         <button type="button" class="char-thumb" data-id="kyo" aria-pressed="false">
-                            <img src="images/kyo.jpg" class="thumb-img" alt="Kyo Ryuken">
+                            <img src="images/kyo_sprite.jpg" class="thumb-img" alt="Kyo Ryuken">
                             <span class="thumb-name">KYO RYUKEN</span>
                             <span class="thumb-role">DRAGON MASTER ☀️</span>
                         </button>
                         <button type="button" class="char-thumb" data-id="athena" aria-pressed="false">
-                            <img src="images/athena.jpg" class="thumb-img" alt="Valkyrie Athena">
+                            <img src="images/athena_sprite.jpg" class="thumb-img" alt="Valkyrie Athena">
                             <span class="thumb-name">VALKYRIE ATHENA</span>
                             <span class="thumb-role">CYBER WARRIOR 🌌</span>
                         </button>
                     </div>
 
                     <!-- Stage Selector -->
-                    <div class="stage-selector-box">
-                        <label for="stage-select">CHOOSE YOUR ARENA</label>
-                        <select id="stage-select" class="cyber-select">
-                            <option value="metropolis">Metropolis Cyber Arena (Sky Ring)</option>
-                            <option value="dojo">Ancient Dragon Dojo (Sakura Shrine)</option>
-                            <option value="volcano">Volcanic Magma Crater (Lava Lake)</option>
-                        </select>
+                    <div class="arena-picker">
+                        <div class="arena-picker-heading"><span>CHOOSE YOUR ARENA</span><small>Preview the battlefield</small></div>
+                        <div class="arena-card-grid" role="group" aria-label="Choose battle arena">
+                            <button type="button" class="arena-card selected" data-stage="metropolis" aria-pressed="true">
+                                <img src="images/arena-metropolis.svg" alt="Neon city skyscrapers around a fighting ring">
+                                <span class="arena-card-copy"><strong>NEON CITY</strong><small>Metropolis Arena</small></span><span class="arena-check">✓</span>
+                            </button>
+                            <button type="button" class="arena-card" data-stage="dojo" aria-pressed="false">
+                                <img src="images/arena-dojo.svg" alt="Traditional dojo beneath cherry blossoms at sunset">
+                                <span class="arena-card-copy"><strong>DRAGON DOJO</strong><small>Sakura Shrine</small></span><span class="arena-check">✓</span>
+                            </button>
+                            <button type="button" class="arena-card" data-stage="volcano" aria-pressed="false">
+                                <img src="images/arena-volcano.svg" alt="Obsidian fighting platform over a glowing lava crater">
+                                <span class="arena-card-copy"><strong>MAGMA CRATER</strong><small>Volcanic Arena</small></span><span class="arena-check">✓</span>
+                            </button>
+                        </div>
                     </div>
 
                     <button id="btn-start-match" class="cyber-btn primary start-fight-btn">
@@ -325,7 +338,7 @@
                 <div class="select-preview-card p2-card">
                     <div class="preview-header" id="p2-header-label">CPU OPPONENT</div>
                     <div class="select-portrait-box">
-                        <img id="p2-select-img" src="images/mai.jpg" class="select-hero-img" alt="Player 2">
+                        <img id="p2-select-img" src="images/mai_sprite.jpg" class="select-hero-img" alt="CPU opponent">
                     </div>
                     <div id="p2-select-name" class="select-hero-name">MAI KASUMI</div>
                     <div class="hero-stats">
@@ -380,6 +393,21 @@
                     </div>
                 </div>
                 <button id="btn-close-controls" class="cyber-btn primary">CLOSE MOVE GUIDE</button>
+            </div>
+        </div>
+
+        <div id="practice-win-screen" class="ui-screen hidden practice-result-screen">
+            <div class="practice-result-card">
+                <span class="result-kicker">TRAINING COMPLETE</span>
+                <div class="result-medal">★</div>
+                <h2 id="practice-win-title">LEVEL ONE CLEAR!</h2>
+                <p id="practice-win-copy">You defeated the training dummy.</p>
+                <div class="practice-result-actions">
+                    <button id="btn-practice-next" class="cyber-btn primary">CONTINUE TO NEXT LEVEL</button>
+                    <button id="btn-practice-retry" class="cyber-btn secondary">REPLAY LEVEL</button>
+                    <button id="btn-practice-levels" class="cyber-btn outline">CHANGE FIGHTER</button>
+                    <button id="btn-practice-menu" class="cyber-btn outline">MAIN MENU</button>
+                </div>
             </div>
         </div>
     </div>
