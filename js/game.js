@@ -35,6 +35,7 @@ class GameEngine3D {
 
         this.gameState = 'MENU';
         this.gameMode = 'CPU';
+        this.selectedPlayerCharacter = 'titan';
 
         // Initialize 3D Fighters (Titan vs Mai)
         this.p1 = new Fighter3D('p1', 'titan', -4, true, false);
@@ -73,7 +74,6 @@ class GameEngine3D {
 
     initDOMListeners() {
         document.getElementById('btn-mode-cpu').addEventListener('click', () => this.openCharSelect('CPU'));
-        document.getElementById('btn-mode-2p').addEventListener('click', () => this.openCharSelect('2P'));
         document.getElementById('btn-mode-practice').addEventListener('click', () => this.openCharSelect('PRACTICE'));
         document.getElementById('btn-controls-modal').addEventListener('click', () => this.showModal('controls-modal'));
         document.getElementById('btn-close-controls').addEventListener('click', () => this.hideModal('controls-modal'));
@@ -172,31 +172,38 @@ class GameEngine3D {
 
     initInputListeners() {
         window.addEventListener('keydown', (e) => {
+            const gameKeys = ['KeyA', 'KeyD', 'KeyW', 'KeyS', 'KeyF', 'KeyH', 'KeyG', 'KeyP', 'KeyQ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+            if (gameKeys.includes(e.code)) e.preventDefault();
+            const wasDown = this.keys[e.code] === true;
+            if (e.repeat && ['KeyF', 'KeyH', 'KeyG', 'KeyP'].includes(e.code)) return;
             this.keys[e.code] = true;
 
             if (this.gameState === 'FIGHTING') {
+                if (!wasDown) {
+                    if (e.code === 'KeyW' || e.code === 'ArrowUp') this.p1.jump();
+                }
                 // Key P: POWER ATTACK
                 if (e.code === 'KeyP') {
                     this.p1.usePower();
                     this.showCombatAction('power');
                 }
-                // Key F or J: PUNCH
-                if (e.code === 'KeyF' || e.code === 'KeyJ') {
+                // F: PUNCH
+                if (e.code === 'KeyF') {
                     this.p1.punch();
                     this.showCombatAction('punch');
                 }
-                // Key H or K: KICK
-                if (e.code === 'KeyH' || e.code === 'KeyK') {
+                // H: KICK
+                if (e.code === 'KeyH') {
                     this.p1.kick();
                     this.showCombatAction('kick');
                 }
-                // Key G or L: DAO GRAPPLE SLAM
-                if (e.code === 'KeyG' || e.code === 'KeyL') {
+                // G: DAO GRAPPLE SLAM
+                if (e.code === 'KeyG') {
                     this.p1.daoStrike(this.p2);
                     this.showCombatAction('dao');
                 }
-                // Key Q or Shift: GUARD
-                if (e.code === 'KeyQ' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+                // Q: GUARD
+                if (e.code === 'KeyQ') {
                     this.p1.block();
                     this.showCombatAction('block');
                 }
@@ -208,8 +215,12 @@ class GameEngine3D {
         });
 
         window.addEventListener('keyup', (e) => {
+            if (['KeyA', 'KeyD', 'KeyW', 'KeyS', 'KeyQ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
             this.keys[e.code] = false;
-            if (e.code === 'KeyQ' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+            if (this.gameState === 'FIGHTING') {
+                if (e.code === 'ArrowDown') this.p1.uncrouch();
+            }
+            if (e.code === 'KeyQ') {
                 this.p1.unblock();
             }
         });
@@ -224,28 +235,31 @@ class GameEngine3D {
 
     openCharSelect(mode) {
         this.gameMode = mode;
-        document.getElementById('p2-header-label').innerText = mode === '2P' ? 'PLAYER 2' : (mode === 'PRACTICE' ? 'DUMMY BOT' : '3D CPU OPPONENT');
+        document.getElementById('p2-header-label').innerText = mode === 'PRACTICE' ? 'TRAINING DUMMY' : 'CPU OPPONENT';
         this.showScreen('char-select-screen');
         voiceEngine.announceSelect();
         this.checkOrientation();
     }
 
     selectRosterChar(charId) {
+        this.selectedPlayerCharacter = charId;
+        const opponentCharacter = charId === 'titan' ? 'mai' : 'titan';
         if (this.p1.characterId !== charId) {
             this.scene.remove(this.p1.group);
             this.p1 = new Fighter3D('p1', charId, -4, true, false);
             this.scene.add(this.p1.group);
-        } else {
+        }
+        if (this.p2.characterId !== opponentCharacter) {
             this.scene.remove(this.p2.group);
-            this.p2 = new Fighter3D('p2', charId === 'titan' ? 'mai' : charId, 4, false, true);
+            this.p2 = new Fighter3D('p2', opponentCharacter, 4, false, true);
             this.scene.add(this.p2.group);
         }
 
         document.querySelectorAll('.char-thumb').forEach(t => {
             const id = t.getAttribute('data-id');
             t.classList.remove('selected-p1', 'selected-p2');
-            if (id === this.p1.characterId) t.classList.add('selected-p1');
-            if (id === this.p2.characterId) t.classList.add('selected-p2');
+            t.setAttribute('aria-pressed', id === charId ? 'true' : 'false');
+            if (id === charId) t.classList.add('selected-p1');
         });
 
         const p1Data = ULTRA_ROSTER[this.p1.characterId];
@@ -339,14 +353,25 @@ class GameEngine3D {
         if (this.gameMode === 'CPU') this.cpu = new CPUController(this.p2, this.p1);
         else this.cpu = null;
 
+        const isPractice = this.gameMode === 'PRACTICE';
+        this.p2.isTrainingDummy = isPractice;
+        const p2Rank = document.querySelector('.p2-hud .rank-tag');
+        if (p2Rank) p2Rank.innerText = isPractice ? 'DUMMY' : 'CPU';
+        document.getElementById('combat-action').innerText = isPractice ? 'TRAINING' : 'READY';
+        document.getElementById('combat-detail').innerText = isPractice
+            ? 'Practice freely: A/D or arrows move · W/↑ jump · F punch · H kick · G slam · P power'
+            : 'Move with A/D or arrows · Jump with W/↑ · Punch with F · Kick with H';
+
         projectileManager3D.clear();
 
         this.roundTimer = 99;
         this.roundNumber = Math.max(1, this.p1Wins + this.p2Wins + 1);
-        document.getElementById('round-timer').innerText = '99';
+        document.getElementById('round-timer').innerText = isPractice ? '∞' : '99';
 
         const roundBadge = document.getElementById('round-number-badge');
-        if (this.roundNumber >= 3) {
+        if (isPractice) {
+            roundBadge.innerText = 'TRAINING';
+        } else if (this.roundNumber >= 3) {
             roundBadge.innerText = 'FINAL ROUND';
         } else {
             roundBadge.innerText = `ROUND ${this.roundNumber}`;
@@ -400,33 +425,19 @@ class GameEngine3D {
         if (this.gameState !== 'FIGHTING') return;
 
         // Virtual joystick axis & keys
-        const leftHeld = this.keys['KeyA'] || touchController.activeStates.left;
-        const rightHeld = this.keys['KeyD'] || touchController.activeStates.right;
+        const leftHeld = this.keys['KeyA'] || this.keys['ArrowLeft'] || touchController.activeStates.left;
+        const rightHeld = this.keys['KeyD'] || this.keys['ArrowRight'] || touchController.activeStates.right;
         if (leftHeld && !rightHeld) this.p1.moveLeft();
         else if (rightHeld && !leftHeld) this.p1.moveRight();
         else if (!touchController.isDraggingJoystick) this.p1.stopMove();
 
-        if (this.keys['KeyS'] || touchController.activeStates.down) this.p1.crouch();
-        else if (!touchController.activeStates.down && !this.keys['KeyS']) this.p1.uncrouch();
-
-        if (this.keys['KeyW']) this.p1.jump();
-
-        // 2-Player Local Mode
-        if (this.gameMode === '2P') {
-            if (this.keys['ArrowLeft']) this.p2.moveLeft();
-            else if (this.keys['ArrowRight']) this.p2.moveRight();
-            else this.p2.stopMove();
-
-            if (this.keys['ArrowDown']) this.p2.crouch();
-            else this.p2.uncrouch();
-
-            if (this.keys['ArrowUp']) this.p2.jump();
-            if (this.keys['Numpad1']) this.p2.punch();
-            if (this.keys['Numpad2']) this.p2.kick();
-            if (this.keys['Numpad3']) this.p2.daoStrike(this.p1);
-            if (this.keys['Numpad0']) this.p2.usePower();
-        } else if (this.gameMode === 'CPU' && this.cpu) {
+        if (this.keys['KeyS'] || this.keys['ArrowDown'] || touchController.activeStates.down) this.p1.crouch();
+        else this.p1.uncrouch();
+        if (this.gameMode === 'CPU' && this.cpu) {
             this.cpu.update();
+        } else if (this.gameMode === 'PRACTICE' && this.p2) {
+            this.p2.stopMove();
+            this.p2.unblock();
         }
     }
 
@@ -439,17 +450,23 @@ class GameEngine3D {
         if (this.p1.isAttacking() && !this.p1.hasHitEnemy && dist < 2.3) {
             this.p1.hasHitEnemy = true;
             const dmg = this.p1.activeHitbox ? this.p1.activeHitbox.damage : 12;
-            this.p2.takeDamage(dmg, 18, this.p1);
+            if (this.gameMode === 'PRACTICE') {
+                this.p2.state = 'HURT';
+                this.p2.hitStunTimer = 12;
+                this.p2.isGrounded = true;
+                this.p2.y = 0;
+                this.p2.health = this.p2.maxHealth;
+            } else this.p2.takeDamage(dmg, 18, this.p1);
             this.shakeCamera(0.38, 9);
-            if (this.p2.health <= 0) this.onKnockout(this.p1, this.p2);
+            if (this.p2.health <= 0 && this.gameMode !== 'PRACTICE') this.onKnockout(this.p1, this.p2);
         }
 
         if (this.p2.isAttacking() && !this.p2.hasHitEnemy && dist < 2.3) {
             this.p2.hasHitEnemy = true;
             const dmg = this.p2.activeHitbox ? this.p2.activeHitbox.damage : 12;
-            this.p1.takeDamage(dmg, 18, this.p2);
+            if (!this.p2.isTrainingDummy) this.p1.takeDamage(dmg, 18, this.p2);
             this.shakeCamera(0.38, 9);
-            if (this.p1.health <= 0) this.onKnockout(this.p2, this.p1);
+            if (this.p1.health <= 0 && this.gameMode !== 'PRACTICE') this.onKnockout(this.p2, this.p1);
         }
 
         // Power Projectiles
@@ -460,14 +477,25 @@ class GameEngine3D {
 
             if (Math.abs(proj.x - target.x) < 1.6) {
                 proj.destroy();
-                target.takeDamage(proj.damage, 24, attacker);
+                if (this.gameMode === 'PRACTICE' && target === this.p2) {
+                    target.state = 'HURT';
+                    target.hitStunTimer = 12;
+                    target.health = target.maxHealth;
+                } else if (!(this.gameMode === 'PRACTICE' && target === this.p1)) {
+                    target.takeDamage(proj.damage, 24, attacker);
+                }
                 this.shakeCamera(0.50, 14);
-                if (target.health <= 0) this.onKnockout(attacker, target);
+                if (target.health <= 0 && this.gameMode !== 'PRACTICE') this.onKnockout(attacker, target);
             }
         }
     }
 
     onKnockout(winner, loser) {
+        if (this.gameMode === 'PRACTICE') {
+            loser.resetPosition(loser === this.p1 ? -4 : 4);
+            loser.isTrainingDummy = loser === this.p2;
+            return;
+        }
         if (this.gameState === 'KO') return;
         this.gameState = 'KO';
         soundManager.stopFightBGM();
@@ -506,9 +534,9 @@ class GameEngine3D {
     showCombatAction(action, detail = '') {
         const labels = {
             power: ['UNIQUE POWER [P]', 'Elemental Ki Energy Blast'],
-            punch: ['PUNCH STRIKE [F/J]', 'Heavy Boxing Jab'],
-            kick: ['MARTIAL KICK [H/K]', 'High Impact Kick'],
-            dao: ['DAO TAKEDOWN [G/L]', 'Martial Arts Takedown Strike'],
+            punch: ['PUNCH STRIKE [F]', 'Heavy Boxing Jab'],
+            kick: ['MARTIAL KICK [H]', 'High Impact Kick'],
+            dao: ['DAO TAKEDOWN [G]', 'Martial Arts Takedown Strike'],
             block: ['GUARD SHIELD [Q]', 'Energy Defense Barrier'],
             jump: ['AERIAL JUMP', 'Airborne Attack Stance'],
             'match-winner': ['MATCH CHAMPION', detail],

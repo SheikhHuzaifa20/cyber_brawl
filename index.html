@@ -110,9 +110,9 @@
 
             <!-- Floating Combat Feed Indicator -->
             <div id="combat-status" class="combat-status">
-                <span class="status-kicker">COMBAT FEED</span>
+                <span class="status-kicker">QUICK TIP</span>
                 <strong id="combat-action">READY</strong>
-                <span id="combat-detail">Press P for Power, F/J for Punch, H/K for Kick, G/L for Dao, Q for Guard.</span>
+                <span id="combat-detail">Move with A / D · Punch with F · Kick with H · Guard with Q</span>
             </div>
         </div>
 
@@ -130,7 +130,7 @@
                         <div class="stick-core"></div>
                     </div>
                 </div>
-                <div class="joystick-title">360° JOYSTICK</div>
+                <div class="joystick-title">MOVE</div>
             </div>
 
             <!-- Right: 5 Core Combat Buttons Cluster -->
@@ -145,26 +145,26 @@
                     <button id="btn-touch-block" class="arcade-btn btn-guard" title="Guard Shield [Q]">
                         <span class="btn-glyph">🛡️</span>
                         <span class="btn-badge">GUARD</span>
-                        <span class="btn-key-badge">[ Q / SHIFT ]</span>
+                    <span class="btn-key-badge">[ Q ]</span>
                     </button>
                 </div>
 
                 <!-- Bottom Row: Punch, Kick & Dao Takedown -->
                 <div class="arcade-row row-bottom">
-                    <button id="btn-touch-punch" class="arcade-btn btn-punch" title="Punch Strike [F/J]">
+                    <button id="btn-touch-punch" class="arcade-btn btn-punch" title="Punch Strike [F]">
                         <span class="btn-glyph">🥊</span>
                         <span class="btn-badge">PUNCH</span>
-                        <span class="btn-key-badge">[ F / J ]</span>
+                        <span class="btn-key-badge">[ F ]</span>
                     </button>
-                    <button id="btn-touch-kick" class="arcade-btn btn-kick" title="Martial Kick [H/K]">
+                    <button id="btn-touch-kick" class="arcade-btn btn-kick" title="Martial Kick [H]">
                         <span class="btn-glyph">🦵</span>
                         <span class="btn-badge">KICK</span>
-                        <span class="btn-key-badge">[ H / K ]</span>
+                        <span class="btn-key-badge">[ H ]</span>
                     </button>
-                    <button id="btn-touch-dao" class="arcade-btn btn-dao" title="Dao Slam [G/L]">
+                    <button id="btn-touch-dao" class="arcade-btn btn-dao" title="Dao Slam [G]">
                         <span class="btn-glyph">🥋</span>
                         <span class="btn-badge">DAO SLAM</span>
-                        <span class="btn-key-badge">[ G / L ]</span>
+                        <span class="btn-key-badge">[ G ]</span>
                     </button>
                 </div>
             </div>
@@ -172,15 +172,14 @@
 
         <!-- PC Desktop Keyboard Controls Guide Bar (hidden on mobile) -->
         <div class="desktop-controls-bar" id="desktop-controls-bar">
-            <span>⬅️ <kbd>A</kbd> Retreat</span>
-            <span>➡️ <kbd>D</kbd> Advance</span>
-            <span>⬆️ <kbd>W</kbd> Jump</span>
-            <span>⬇️ <kbd>S</kbd> Crouch</span>
-            <span>🥊 <kbd>F</kbd>/<kbd>J</kbd> Punch</span>
-            <span>🦵 <kbd>H</kbd>/<kbd>K</kbd> Kick</span>
-            <span>🥋 <kbd>G</kbd>/<kbd>L</kbd> DAO Slam</span>
-            <span>⚡ <kbd>P</kbd> Power</span>
-            <span>🛡️ <kbd>Q</kbd> Guard</span>
+            <span><kbd>A</kbd> / <kbd>D</kbd> Move</span>
+            <span><kbd>W</kbd> Jump</span>
+            <span><kbd>S</kbd> Crouch</span>
+            <span><kbd>F</kbd> / <kbd>J</kbd> Punch</span>
+            <span><kbd>H</kbd> / <kbd>K</kbd> Kick</span>
+            <span><kbd>G</kbd> / <kbd>L</kbd> Slam</span>
+            <span><kbd>P</kbd> Power</span>
+            <span><kbd>Q</kbd> Guard</span>
         </div>
 
         <!-- MOBILE PORTRAIT ORIENTATION HELPER -->
@@ -229,43 +228,46 @@
         <!-- MAIN MENU SCREEN -->
         <div id="menu-screen" class="ui-screen">
             <div class="arcade-title-box">
-                <div class="cyber-badge">ULTRA 3D ARCADE FIGHTER</div>
-                <h1 class="game-title">CYBER BRAWL 3D</h1>
-                <h2 class="game-subtitle">WORLD CHAMPIONSHIP</h2>
+                <div class="cyber-badge">THE NEON FIGHTING ARENA</div>
+                <h1 class="game-title">CYBER BRAWL <span>3D</span></h1>
+                <p class="menu-intro">Pick a fighter, step into the arena, and claim your victory.</p>
+            </div>
+
+            <div class="quick-start-guide" aria-label="How to play">
+                <div class="quick-step"><span>01</span><strong>Choose a mode</strong><small>Solo battle or practice</small></div>
+                <div class="quick-step"><span>02</span><strong>Pick your fighter</strong><small>Choose a hero and arena</small></div>
+                <div class="quick-step"><span>03</span><strong>Jump into the arena</strong><small>Use keyboard or touch controls</small></div>
             </div>
 
             <div class="menu-actions">
-                <button id="btn-mode-cpu" class="cyber-btn primary">
-                    <span class="btn-icon">👤 VS 🤖</span>
-                    <span class="btn-text">1 PLAYER VS 3D CPU</span>
+                <button id="btn-mode-cpu" class="cyber-btn primary mode-card">
+                    <span class="btn-icon">01</span>
+                    <span class="mode-copy"><span class="btn-text">PLAY SOLO</span><small>Take on the computer</small></span>
+                    <span class="mode-arrow" aria-hidden="true">→</span>
                 </button>
-                <button id="btn-mode-2p" class="cyber-btn secondary">
-                    <span class="btn-icon">👤 VS 👤</span>
-                    <span class="btn-text">2 PLAYER LOCAL VERSUS</span>
+                <button id="btn-mode-practice" class="cyber-btn tertiary mode-card">
+                    <span class="btn-icon">02</span>
+                    <span class="mode-copy"><span class="btn-text">PRACTICE</span><small>Learn the moves at your pace</small></span>
+                    <span class="mode-arrow" aria-hidden="true">→</span>
                 </button>
-                <button id="btn-mode-practice" class="cyber-btn tertiary">
-                    <span class="btn-icon">🥋</span>
-                    <span class="btn-text">DOJO TRAINING MODE</span>
-                </button>
-                <button id="btn-controls-modal" class="cyber-btn outline">
-                    <span class="btn-icon">🎮</span>
-                    <span class="btn-text">CONTROLS & KEY GUIDE</span>
+                <button id="btn-controls-modal" class="cyber-btn outline guide-button">
+                    <span class="btn-text">HOW TO PLAY &amp; CONTROLS</span>
                 </button>
             </div>
 
             <div class="menu-footer">
-                <p>© 2026 CYBER BRAWL 3D ULTRA ENGINE | 100% ENGLISH INTERFACE</p>
+                <p>KEYBOARD &amp; TOUCH CONTROLS AVAILABLE</p>
             </div>
         </div>
 
         <!-- CHARACTER SELECT SCREEN -->
         <div id="char-select-screen" class="ui-screen hidden">
-            <h2 class="screen-title">SELECT YOUR CHAMPION</h2>
+            <div class="selection-heading"><span class="step-label">STEP 2 OF 2</span><h2 class="screen-title">CHOOSE YOUR FIGHTER</h2><p>Select your fighter and arena, then start the fight.</p></div>
 
             <div class="selection-arena">
                 <!-- P1 Card -->
                 <div class="select-preview-card p1-card">
-                    <div class="preview-header">PLAYER 1</div>
+                    <div class="preview-header">YOUR FIGHTER</div>
                     <div class="select-portrait-box">
                         <img id="p1-select-img" src="images/titan.jpg" class="select-hero-img" alt="Player 1">
                     </div>
@@ -279,32 +281,33 @@
 
                 <!-- Roster Grid -->
                 <div class="roster-container">
+                    <div class="roster-heading"><span>FIGHTER ROSTER</span><small>Choose your champion</small></div>
                     <div class="roster-grid">
-                        <div class="char-thumb selected-p1" data-id="titan">
+                        <button type="button" class="char-thumb selected-p1" data-id="titan" aria-pressed="true">
                             <img src="images/titan.jpg" class="thumb-img" alt="Raiden Titan">
                             <span class="thumb-name">RAIDEN TITAN</span>
                             <span class="thumb-role">THUNDER CHAMPION ⚡</span>
-                        </div>
-                        <div class="char-thumb selected-p2" data-id="mai">
+                        </button>
+                        <button type="button" class="char-thumb" data-id="mai" aria-pressed="false">
                             <img src="images/mai.jpg" class="thumb-img" alt="Mai Kasumi">
                             <span class="thumb-name">MAI KASUMI</span>
                             <span class="thumb-role">FLAME SHINOBI 🔥</span>
-                        </div>
-                        <div class="char-thumb" data-id="kyo">
+                        </button>
+                        <button type="button" class="char-thumb" data-id="kyo" aria-pressed="false">
                             <img src="images/kyo.jpg" class="thumb-img" alt="Kyo Ryuken">
                             <span class="thumb-name">KYO RYUKEN</span>
                             <span class="thumb-role">DRAGON MASTER ☀️</span>
-                        </div>
-                        <div class="char-thumb" data-id="athena">
+                        </button>
+                        <button type="button" class="char-thumb" data-id="athena" aria-pressed="false">
                             <img src="images/athena.jpg" class="thumb-img" alt="Valkyrie Athena">
                             <span class="thumb-name">VALKYRIE ATHENA</span>
                             <span class="thumb-role">CYBER WARRIOR 🌌</span>
-                        </div>
+                        </button>
                     </div>
 
                     <!-- Stage Selector -->
                     <div class="stage-selector-box">
-                        <label for="stage-select">SELECT 3D BATTLE ARENA:</label>
+                        <label for="stage-select">CHOOSE YOUR ARENA</label>
                         <select id="stage-select" class="cyber-select">
                             <option value="metropolis">Metropolis Cyber Arena (Sky Ring)</option>
                             <option value="dojo">Ancient Dragon Dojo (Sakura Shrine)</option>
@@ -313,14 +316,14 @@
                     </div>
 
                     <button id="btn-start-match" class="cyber-btn primary start-fight-btn">
-                        <span>⚡ ENTER BATTLE ARENA! ⚡</span>
+                        <span>START FIGHT</span>
                     </button>
                     <button id="btn-back-to-menu" class="cyber-btn outline">BACK TO MAIN MENU</button>
                 </div>
 
                 <!-- P2 Card -->
                 <div class="select-preview-card p2-card">
-                    <div class="preview-header" id="p2-header-label">PLAYER 2 / CPU</div>
+                    <div class="preview-header" id="p2-header-label">CPU OPPONENT</div>
                     <div class="select-portrait-box">
                         <img id="p2-select-img" src="images/mai.jpg" class="select-hero-img" alt="Player 2">
                     </div>
@@ -353,28 +356,26 @@
                 <h2 class="modal-header">3D CONTROLS & MOVE GUIDE</h2>
                 <div class="controls-grid">
                     <div class="control-column">
-                        <h3>💻 PC KEYBOARD CONTROLS</h3>
+                        <h3>KEYBOARD CONTROLS</h3>
                         <ul>
-                            <li><kbd>P</kbd> - ⚡ <strong>UNIQUE POWER ATTACK</strong> (Electric/Fire/Plasma)</li>
-                            <li><kbd>F</kbd> or <kbd>J</kbd> - 🥊 <strong>PUNCH STRIKE</strong> (Jab)</li>
-                            <li><kbd>H</kbd> or <kbd>K</kbd> - 🦵 <strong>MARTIAL KICK</strong></li>
-                            <li><kbd>G</kbd> or <kbd>L</kbd> - 🥋 <strong>DAO TAKEDOWN</strong> (Lunge Sweep)</li>
-                            <li><kbd>Q</kbd> or <kbd>SHIFT</kbd> - 🛡️ <strong>GUARD SHIELD</strong> (Hold Block)</li>
-                            <li><kbd>D</kbd> - 🏃 <strong>FAST COMBAT DASH FORWARD</strong></li>
-                            <li><kbd>A</kbd> - 🚶 <strong>RETREAT SPACING</strong></li>
-                            <li><kbd>W</kbd> - ⬆️ <strong>JUMP</strong></li>
-                            <li><kbd>S</kbd> - ⬇️ <strong>CROUCH</strong></li>
+                            <li><kbd>A</kbd> / <kbd>D</kbd> or <kbd>←</kbd> / <kbd>→</kbd> - <strong>Move left / right</strong></li>
+                            <li><kbd>W</kbd> or <kbd>↑</kbd> - <strong>Jump</strong></li>
+                            <li><kbd>S</kbd> or <kbd>↓</kbd> - <strong>Crouch</strong></li>
+                            <li><kbd>F</kbd> - <strong>Punch</strong></li>
+                            <li><kbd>H</kbd> - <strong>Kick</strong></li>
+                            <li><kbd>G</kbd> - <strong>Heavy slam</strong></li>
+                            <li><kbd>P</kbd> - <strong>Special power</strong></li>
+                            <li><kbd>Q</kbd> - <strong>Hold to guard</strong></li>
                         </ul>
                     </div>
                     <div class="control-column">
-                        <h3>📱 TOUCH & JOYSTICK CONTROLS</h3>
+                        <h3>PHONE &amp; TABLET</h3>
                         <ul>
-                            <li><strong>360° Analog Joystick</strong> - Drag right for fast combat dash, up to jump, down to crouch</li>
-                            <li><strong>⚡ POWER Button</strong> - Launch character's unique elemental energy blast</li>
-                            <li><strong>🥊 PUNCH Button</strong> - Fast boxing punch</li>
-                            <li><strong>🦵 KICK Button</strong> - High martial arts kick</li>
-                            <li><strong>🥋 DAO Button</strong> - Leaping takedown grapple sweep</li>
-                            <li><strong>🛡️ GUARD Button</strong> - Deploy energy block shield</li>
+                            <li><strong>Drag the MOVE pad</strong> left or right to approach or retreat.</li>
+                            <li><strong>Tap PUNCH or KICK</strong> for your basic attacks.</li>
+                            <li><strong>Tap POWER</strong> for your fighter's special move.</li>
+                            <li><strong>Hold GUARD</strong> to block incoming attacks.</li>
+                            <li><strong>DAO SLAM</strong> launches a heavy close-range attack.</li>
                         </ul>
                     </div>
                 </div>

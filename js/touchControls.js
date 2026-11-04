@@ -167,6 +167,7 @@ class TouchControllerManager {
 
             const endAction = (e) => {
                 if (e.cancelable) e.preventDefault();
+                if (!this.activeStates[keyName]) return;
                 this.activeStates[keyName] = false;
                 el.classList.remove('active', 'guard-active');
                 this.triggerGameInput(keyName, false);
@@ -182,6 +183,7 @@ class TouchControllerManager {
             el.addEventListener('pointerup', endAction);
             el.addEventListener('pointercancel', endAction);
             el.addEventListener('lostpointercapture', endAction);
+            el.addEventListener('contextmenu', (e) => e.preventDefault());
         };
 
         // Bind the 5 VIP Combat Buttons

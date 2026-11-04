@@ -523,7 +523,7 @@ class Fighter3D {
 
         if (this.state === 'HURT') {
             this.hitStunTimer--;
-            if (this.hitStunTimer <= 0) this.state = 'IDLE';
+            if (this.hitStunTimer <= 0) this.state = this.isGrounded ? 'IDLE' : 'JUMP';
             this.applyPhysics();
             this.updateSkeletalPose();
             return;
@@ -606,7 +606,7 @@ class Fighter3D {
         if (this.isAttacking()) {
             this.attackTimer--;
             if (this.attackTimer <= 0) {
-                this.state = 'IDLE';
+                this.state = this.isGrounded ? 'IDLE' : 'JUMP';
                 this.activeHitbox = null;
                 this.hasHitEnemy = false;
             }
@@ -628,6 +628,7 @@ class Fighter3D {
             this.y = 0;
             this.isGrounded = true;
             this.vy = 0;
+            if (this.state === 'JUMP') this.state = 'IDLE';
         }
 
         this.x = Math.max(-14, Math.min(14, this.x));
@@ -764,21 +765,21 @@ class Fighter3D {
         if (!this.canMove()) return;
         const isForward = this.facing === -1;
         this.vx = isForward ? -this.speedForward : -this.speedBackward;
-        this.state = isForward ? 'DASH_FORWARD' : 'RETREAT_GUARD';
+        if (this.isGrounded) this.state = isForward ? 'DASH_FORWARD' : 'RETREAT_GUARD';
     }
 
     moveRight() {
         if (!this.canMove()) return;
         const isForward = this.facing === 1;
         this.vx = isForward ? this.speedForward : this.speedBackward;
-        this.state = isForward ? 'DASH_FORWARD' : 'RETREAT_GUARD';
+        if (this.isGrounded) this.state = isForward ? 'DASH_FORWARD' : 'RETREAT_GUARD';
     }
 
     stopMove() {
         if (this.state === 'DASH_FORWARD' || this.state === 'RETREAT_GUARD') {
             this.vx = 0;
             this.state = 'IDLE';
-        }
+        } else if (this.state === 'JUMP') this.vx = 0;
     }
 
     crouch() { if (this.canMove() && this.isGrounded) { this.vx = 0; this.state = 'CROUCH'; } }
@@ -883,7 +884,7 @@ class Fighter3D {
         }
     }
 
-    canMove() { return this.state === 'IDLE' || this.state === 'DASH_FORWARD' || this.state === 'RETREAT_GUARD'; }
-    canAttack() { return !this.isAttacking() && this.state !== 'HURT' && this.state !== 'KNOCKOUT'; }
+    canMove() { return this.state === 'IDLE' || this.state === 'JUMP' || this.state === 'DASH_FORWARD' || this.state === 'RETREAT_GUARD'; }
+    canAttack() { return !this.isAttacking() && this.state !== 'HURT' && this.state !== 'KNOCKOUT' && this.state !== 'BLOCK' && this.state !== 'CROUCH'; }
     isAttacking() { return ['PUNCH', 'KICK', 'DAO_STRIKE', 'POWER_ATTACK'].includes(this.state); }
 }
